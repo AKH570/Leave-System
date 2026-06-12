@@ -1,0 +1,94 @@
+class Registration(models.Model):
+    """
+    Model to handle new user registration requests.
+    Stores registration data before user account creation and approval.
+    """
+    STATUS_CHOICES = (
+        ('PENDING', 'Pending Approval'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
+    )
+
+    # Personal Information
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    
+    phone_regex = RegexValidator(
+        regex=r'^[0-9+\-\s()]{10,15}$',
+        message='Phone number must be 10-15 digits with optional + or -'
+    )
+    phone = models.CharField(
+        max_length=15,
+        validators=[phone_regex],
+        help_text='10-15 digits with optional + or -'
+    )
+
+    # Professional Information
+    designation = models.CharField(max_length=100, blank=True, null=True)
+    department = models.ForeignKey(
+        Department,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    # Account Information
+    username = models.CharField(
+        max_length=150,
+        unique=True,
+        help_text='3-150 characters, alphanumeric and underscores only'
+    )
+    
+    email = models.EmailField(unique=True,null=True, blank=True)
+    
+    password = models.CharField(max_length=255)
+    confirm_password = models.CharField(max_length=255)
+
+    # Registration Status
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='PENDING'
+    )
+
+    terms_accepted = models.BooleanField(default=False)
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    approved_at = models.DateTimeField(blank=True, null=True)
+
+    # Approval Info
+    approved_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='approved_registrations'
+    )
+
+    rejection_reason = models.TextField(blank=True, null=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['status', '-created_at']),
+            models.Index(fields=['username']),
+            models.Index(fields=['email']),
+        ]
+
+    def __str__(self):
+        return f"{self.username} - {self.status}"
+
+    def approve(self, approved_by_user):
+        """Approve the registration"""
+        self.status = 'APPROVED'
+        self.approved_by = approved_by_user
+        self.approved_at = timezone.now()
+        self.save()
+
+    def reject(self, reason=''):
+        """Reject the registration"""
+        self.status = 'REJECTED'
+        self.rejection_reason = reason
+        self.save()

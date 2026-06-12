@@ -1,0 +1,181 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="leave-application-page">
+    <div class="leave-page-heading d-flex flex-column flex-lg-row justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="leave-page-title mb-1">New Leave Request</h1>
+            <p class="leave-page-subtitle mb-0">Submit your leave details for review and approval.</p>
+        </div>
+
+        <nav class="leave-breadcrumb" aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item">
+                    <a href="{% url 'emp_dashboard' %}" class="text-decoration-none">Dashboard</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Apply Leave</li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="row g-4 leave-shell">
+        <div class="col-12 col-xl-8">
+            <section class="leave-form-card">
+                <div class="leave-form-header">
+                    <div class="leave-header-icon" aria-hidden="true">
+                        <i class="fas fa-paper-plane"></i>
+                    </div>
+                    <div>
+                        <h5>Request Details</h5>
+                        <p>Please provide accurate dates and a clear reason for faster processing.</p>
+                    </div>
+                </div>
+
+                <form method="POST" class="leave-form-body" id="leaveRequestForm" novalidate>
+                    {% csrf_token %}
+
+                    <div class="leave-field">
+                        <label for="{{ form.leave_type.id_for_label }}" class="form-label">
+                            <i class="fas fa-layer-group" aria-hidden="true"></i>
+                            Leave Type
+                        </label>
+                        {{ form.leave_type }}
+                        {% if form.leave_type.errors %}
+                            <div class="invalid-feedback">{{ form.leave_type.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="leave-date-row">
+                        <div class="leave-date-column">
+                            <div class="leave-field">
+                                <label for="{{ form.from_date.id_for_label }}" class="form-label">
+                                    <i class="fas fa-calendar-day" aria-hidden="true"></i>
+                                    Start Date
+                                </label>
+                                {{ form.from_date }}
+                                {% if form.from_date.errors %}
+                                    <div class="invalid-feedback">{{ form.from_date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="leave-date-column">
+                            <div class="leave-field">
+                                <label for="{{ form.to_date.id_for_label }}" class="form-label">
+                                    <i class="fas fa-calendar-check" aria-hidden="true"></i>
+                                    End Date
+                                </label>
+                                {{ form.to_date }}
+                                {% if form.to_date.errors %}
+                                    <div class="invalid-feedback">{{ form.to_date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="leave-field">
+                        <label for="{{ form.reason.id_for_label }}" class="form-label">
+                            <i class="fas fa-message" aria-hidden="true"></i>
+                            Reason for Leave
+                        </label>
+                        {{ form.reason }}
+                        {% if form.reason.errors %}
+                            <div class="invalid-feedback">{{ form.reason.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                            <i class="fas fa-exclamation-circle me-2" aria-hidden="true"></i>
+                            {% for error in form.non_field_errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endif %}
+
+                    <div class="leave-actions">
+                        <button type="submit" class="btn btn-leave-submit flex-fill" id="submitBtn">
+                            <i class="fas fa-paper-plane me-2" aria-hidden="true"></i>
+                            Submit Request
+                        </button>
+                        <a href="{% url 'leave_history' %}" class="btn btn-leave-cancel flex-fill" aria-label="Cancel leave request and return to leave history">
+                            <i class="fas fa-xmark me-2" aria-hidden="true"></i>
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </section>
+        </div>
+
+        <aside class="col-12 col-xl-4">
+            <div class="leave-side-stack">
+                <div class="leave-balance-card">
+                    <p class="leave-balance-label">Available Balance</p>
+                    <h2 class="leave-balance-value">
+                        {{ leave_balance|default:"--" }}
+                        <span>Days</span>
+                    </h2>
+                </div>
+
+                <section class="leave-side-card">
+                    <h6>
+                        <i class="fas fa-circle-info text-primary" aria-hidden="true"></i>
+                        Submission Policy
+                    </h6>
+
+                    <div class="leave-tip">
+                        <i class="fas fa-circle-check" aria-hidden="true"></i>
+                        <span>Request leave at least <strong>2 business days</strong> in advance.</span>
+                    </div>
+                    <div class="leave-tip">
+                        <i class="fas fa-circle-check" aria-hidden="true"></i>
+                        <span>Public holidays and weekends are not counted as leave days.</span>
+                    </div>
+                    <div class="leave-tip mb-0">
+                        <i class="fas fa-circle-check" aria-hidden="true"></i>
+                        <span>Requests can only be cancelled while their status is <strong>Pending</strong>.</span>
+                    </div>
+
+                    <p class="leave-help mb-0">
+                        Need help? Contact HR at
+                        <a href="mailto:hr@company.com">hr@company.com</a>
+                    </p>
+                </section>
+            </div>
+        </aside>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('leaveRequestForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const fields = form.querySelectorAll('input, select, textarea');
+
+        fields.forEach(function (field) {
+            if (field.tagName === 'SELECT') {
+                field.classList.add('form-select');
+            } else {
+                field.classList.add('form-control');
+            }
+
+            if (field.name && field.name.toLowerCase().includes('date')) {
+                field.setAttribute('type', 'date');
+            }
+
+            const feedback = field.parentElement.querySelector('.invalid-feedback');
+            if (feedback) {
+                field.classList.add('is-invalid');
+                field.setAttribute('aria-invalid', 'true');
+            }
+        });
+
+        form.addEventListener('submit', function () {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2" aria-hidden="true"></i>Submitting...';
+        });
+    });
+</script>
+{% endblock %}

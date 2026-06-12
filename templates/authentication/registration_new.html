@@ -1,0 +1,797 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register | Leave Management System</title>
+    <link rel="stylesheet" href="{% static 'css/bootstrap-5.3.2.min.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-1: #0b1020;
+            --bg-2: #0f1724;
+            --card-bg: rgba(255,255,255,0.03);
+            --muted: #94a3b8;
+            --accent: #7f26d9;
+            --accent-dark: #6138b7;
+            --input-bg: rgba(255,255,255,0.04);
+            --success: #4ade80;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+            background: radial-gradient(1000px 400px at 10% 10%, rgba(127,38,217,0.12), transparent 18%),
+                        linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
+            color: #e6eef8;
+        }
+
+        .registration-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .registration-wrapper {
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .registration-card {
+            background: var(--card-bg);
+            border-radius: 1.2rem;
+            padding: 2.5rem;
+            border: 1px solid rgba(255,255,255,0.04);
+            box-shadow: 0 25px 60px rgba(2,6,23,0.7);
+        }
+
+        .registration-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .registration-logo {
+            width: 70px;
+            height: 70px;
+            display: block;
+            margin: 0 auto 1rem;
+            background: linear-gradient(135deg, rgba(127,38,217,0.2), rgba(97,56,183,0.1));
+            border-radius: 50%;
+            padding: 15px;
+        }
+
+        .registration-header h2 {
+            color: #fff;
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .registration-header p {
+            color: var(--muted);
+            margin: 0;
+            font-size: 0.95rem;
+        }
+
+        .alerts-container {
+            margin-bottom: 1.5rem;
+        }
+
+        .alerts-container .alert {
+            border-radius: 0.75rem;
+            border: 1px solid rgba(248,113,113,0.18);
+            background: rgba(248,113,113,0.06);
+            color: #ffdede;
+            padding: 0.9rem 1rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px solid rgba(127,38,217,0.2);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .section-title i {
+            font-size: 1rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-row.full {
+            grid-template-columns: 1fr;
+        }
+
+        .form-row.triple {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #e6eef8;
+            margin-bottom: 0.6rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .form-label .required {
+            color: #ff6b6b;
+            font-weight: 700;
+        }
+
+        .form-label-hint {
+            font-size: 0.75rem;
+            color: var(--muted);
+            font-weight: 400;
+            margin-top: 0.3rem;
+        }
+
+        .form-control {
+            background: var(--input-bg);
+            border: 1.5px solid rgba(255,255,255,0.06);
+            color: #e6eef8;
+            padding: 0.95rem 1.1rem;
+            border-radius: 0.8rem;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-control::placeholder {
+            color: rgba(230,238,248,0.45);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(127,38,217,0.15), 0 6px 22px rgba(127,38,217,0.12);
+            background: rgba(255,255,255,0.05);
+        }
+
+        .form-control.is-invalid {
+            border-color: #ff6b6b;
+            box-shadow: 0 0 0 3px rgba(255,107,107,0.15);
+        }
+
+        .form-control:disabled {
+            background: rgba(255,255,255,0.02);
+            opacity: 0.6;
+        }
+
+        .input-icon {
+            position: relative;
+        }
+
+        .input-icon i {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            font-size: 0.95rem;
+            pointer-events: none;
+        }
+
+        .input-icon .form-control {
+            padding-right: 2.8rem;
+        }
+
+        .password-requirements {
+            background: linear-gradient(135deg, rgba(127,38,217,0.08), rgba(127,38,217,0.04));
+            border: 1.5px solid rgba(127,38,217,0.2);
+            border-radius: 0.8rem;
+            padding: 1.1rem;
+            margin-top: 0.8rem;
+            font-size: 0.85rem;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .password-requirements strong {
+            color: #e6eef8;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.7rem;
+        }
+
+        .password-requirements strong i {
+            font-size: 0.9rem;
+        }
+
+        .requirements-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            gap: 0.5rem;
+        }
+
+        .requirements-list li {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            color: var(--muted);
+            transition: all 0.2s ease;
+        }
+
+        .requirement-check {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 1.5px solid rgba(74,222,128,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            color: transparent;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .requirement-check.active {
+            background: rgba(74,222,128,0.15);
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        .terms-section {
+            background: linear-gradient(135deg, rgba(127,38,217,0.05), transparent);
+            border-radius: 0.8rem;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border: 1px solid rgba(127,38,217,0.1);
+        }
+
+        .form-check {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .form-check-input {
+            width: 20px;
+            height: 20px;
+            background-color: var(--input-bg);
+            border: 1.5px solid rgba(255,255,255,0.1);
+            border-radius: 0.5rem;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .form-check-input:hover {
+            border-color: var(--accent);
+        }
+
+        .form-check-input:checked {
+            background-color: var(--accent);
+            border-color: var(--accent);
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 100%;
+        }
+
+        .form-check-input:focus {
+            box-shadow: 0 0 0 0.25rem rgba(127,38,217,0.25);
+        }
+
+        .form-check-label {
+            color: #e6eef8;
+            font-size: 0.9rem;
+            cursor: pointer;
+            margin: 0;
+            flex: 1;
+        }
+
+        .form-check-label a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .form-check-label a:hover {
+            text-decoration: underline;
+        }
+
+        .btn-submit {
+            background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+            border: none;
+            color: #fff;
+            padding: 1rem 2rem;
+            font-weight: 700;
+            border-radius: 0.85rem;
+            width: 100%;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 12px 30px rgba(127,38,217,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+        }
+
+        .btn-submit:hover {
+            background: linear-gradient(90deg, var(--accent-dark), #4a2aa0);
+            box-shadow: 0 15px 40px rgba(127,38,217,0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        .registration-footer {
+            margin-top: 2rem;
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .registration-footer a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .registration-footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .registration-card {
+                padding: 1.8rem;
+            }
+
+            .registration-header h2 {
+                font-size: 24px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 1.2rem;
+            }
+
+            .form-row.triple {
+                grid-template-columns: 1fr;
+            }
+
+            .form-control {
+                padding: 0.85rem 1rem;
+            }
+
+            .section-title {
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .registration-container {
+                padding: 1rem;
+            }
+
+            .registration-card {
+                padding: 1.2rem;
+                border-radius: 1rem;
+            }
+
+            .registration-header {
+                margin-bottom: 1.8rem;
+            }
+
+            .registration-logo {
+                width: 60px;
+                height: 60px;
+            }
+
+            .registration-header h2 {
+                font-size: 20px;
+            }
+
+            .form-section {
+                margin-bottom: 1.5rem;
+            }
+
+            .form-row {
+                margin-bottom: 1.2rem;
+            }
+
+            .btn-submit {
+                padding: 0.9rem 1.5rem;
+                font-size: 0.95rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="registration-container">
+        <div class="registration-wrapper">
+            <div class="registration-card">
+                <!-- Header -->
+                <div class="registration-header">
+                    <img src="{% static 'assets/images/logos/logo.webp' %}" alt="Logo" class="registration-logo">
+                    <h2>Create Your Account</h2>
+                    <p>Join our Leave Management System and get started</p>
+                </div>
+
+                <!-- Messages -->
+                {% if messages %}
+                    <div class="alerts-container">
+                        {% for message in messages %}
+                            <div class="alert">
+                                <i class="fas fa-exclamation-circle"></i> {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Form -->
+                <form method="post" class="registration-form" id="registrationForm" novalidate>
+                    {% csrf_token %}
+
+                    <!-- Personal Information Section -->
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="fas fa-user-circle"></i> Personal Information
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-pen"></i>
+                                    First Name
+                                    <span class="required">*</span>
+                                </label>
+                                <div class="input-icon">
+                                    <input type="text" class="form-control" id="first_name" name="first_name" 
+                                           placeholder="Enter first name" required minlength="2" maxlength="50"
+                                           value="{{ form_data.first_name|default:'' }}">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-pen"></i>
+                                    Last Name
+                                    <span class="required">*</span>
+                                </label>
+                                <div class="input-icon">
+                                    <input type="text" class="form-control" id="last_name" name="last_name" 
+                                           placeholder="Enter last name" required minlength="2" maxlength="50"
+                                           value="{{ form_data.last_name|default:'' }}">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-phone"></i>
+                                    Mobile Number
+                                    <span class="required">*</span>
+                                </label>
+                                <div class="input-icon">
+                                    <input type="tel" class="form-control" id="phone" name="phone" 
+                                           placeholder="Enter mobile number" required pattern="[0-9+\-\s()]{10,15}"
+                                           value="{{ form_data.phone|default:'' }}">
+                                    <i class="fas fa-phone"></i>
+                                </div>
+                                <div class="form-label-hint">10-15 digits with optional + or -</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Professional Information Section -->
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="fas fa-briefcase"></i> Professional Information
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-sitemap"></i>
+                                    Department
+                                    <span class="required">*</span>
+                                </label>
+                                <select class="form-control" id="department" name="department" required>
+                                    <option value="">-- Select Department --</option>
+                                    {% for dept in departments %}
+                                        <option value="{{ dept.id }}" 
+                                                {% if form_data.department == dept.id|stringformat:"s" %}selected{% endif %}>
+                                            {{ dept.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-id-badge"></i>
+                                    Designation
+                                    <span class="required">*</span>
+                                </label>
+                                <div class="input-icon">
+                                    <input type="text" class="form-control" id="designation" name="designation" 
+                                           placeholder="e.g., Software Engineer" required minlength="3" maxlength="100"
+                                           value="{{ form_data.designation|default:'' }}">
+                                    <i class="fas fa-briefcase"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Account Information Section -->
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="fas fa-lock"></i> Account Information
+                        </div>
+
+                        <div class="form-row full">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-at"></i>
+                                    Username
+                                    <span class="required">*</span>
+                                </label>
+                                <div class="input-icon">
+                                    <input type="text" class="form-control" id="username" name="username" 
+                                           placeholder="Create a unique username" required minlength="3" maxlength="150"
+                                           value="{{ form_data.username|default:'' }}">
+                                    <i class="fas fa-user-tag"></i>
+                                </div>
+                                <div class="form-label-hint">3-150 characters, alphanumeric and underscores only</div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-key"></i>
+                                    Password
+                                    <span class="required">*</span>
+                                </label>
+                                <div class="input-icon">
+                                    <input type="password" class="form-control" id="password" name="password" 
+                                           placeholder="Create a strong password" required minlength="8"
+                                           value="{{ form_data.password|default:'' }}">
+                                    <i class="fas fa-lock"></i>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-check-circle"></i>
+                                    Confirm Password
+                                    <span class="required">*</span>
+                                </label>
+                                <div class="input-icon">
+                                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" 
+                                           placeholder="Re-enter your password" required minlength="8"
+                                           value="{{ form_data.confirm_password|default:'' }}">
+                                    <i class="fas fa-lock"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="password-requirements" id="passwordRequirements" style="display: none;">
+                            <strong>
+                                <i class="fas fa-clipboard-check"></i>
+                                Password Requirements:
+                            </strong>
+                            <ul class="requirements-list">
+                                <li>
+                                    <span class="requirement-check" id="check-length">
+                                        <i class="fas fa-check"></i>
+                                    </span>
+                                    At least 8 characters
+                                </li>
+                                <li>
+                                    <span class="requirement-check" id="check-upper">
+                                        <i class="fas fa-check"></i>
+                                    </span>
+                                    One uppercase letter (A-Z)
+                                </li>
+                                <li>
+                                    <span class="requirement-check" id="check-lower">
+                                        <i class="fas fa-check"></i>
+                                    </span>
+                                    One lowercase letter (a-z)
+                                </li>
+                                <li>
+                                    <span class="requirement-check" id="check-number">
+                                        <i class="fas fa-check"></i>
+                                    </span>
+                                    One number (0-9)
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Terms Section -->
+                    <div class="terms-section">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="terms" name="terms" required>
+                            <label class="form-check-label" for="terms">
+                                I agree to the <a href="#">Terms and Conditions</a> and <a href="#">Privacy Policy</a>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn-submit" id="submitBtn">
+                        <i class="fas fa-user-plus"></i>
+                        Create Account
+                    </button>
+                </form>
+
+                <!-- Footer -->
+                <div class="registration-footer">
+                    <p>Already have an account? <a href="{% url 'accounts:login' %}">Sign In Here</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('registrationForm');
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirm_password');
+        const passwordRequirements = document.getElementById('passwordRequirements');
+        const submitBtn = document.getElementById('submitBtn');
+
+        const checks = {
+            length: document.getElementById('check-length'),
+            upper: document.getElementById('check-upper'),
+            lower: document.getElementById('check-lower'),
+            number: document.getElementById('check-number')
+        };
+
+        function validatePassword() {
+            const password = passwordInput.value;
+            
+            const hasLength = password.length >= 8;
+            const hasUpper = /[A-Z]/.test(password);
+            const hasLower = /[a-z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+
+            updateCheck('length', hasLength);
+            updateCheck('upper', hasUpper);
+            updateCheck('lower', hasLower);
+            updateCheck('number', hasNumber);
+
+            return hasLength && hasUpper && hasLower && hasNumber;
+        }
+
+        function updateCheck(checkName, isValid) {
+            if (isValid) {
+                checks[checkName].classList.add('active');
+            } else {
+                checks[checkName].classList.remove('active');
+            }
+        }
+
+        function validatePasswordsMatch() {
+            if (passwordInput.value && confirmPasswordInput.value) {
+                if (passwordInput.value !== confirmPasswordInput.value) {
+                    confirmPasswordInput.classList.add('is-invalid');
+                    return false;
+                } else {
+                    confirmPasswordInput.classList.remove('is-invalid');
+                    return true;
+                }
+            }
+            confirmPasswordInput.classList.remove('is-invalid');
+            return true;
+        }
+
+        function togglePasswordRequirements() {
+            if (passwordInput.value.length > 0) {
+                passwordRequirements.style.display = 'block';
+            } else {
+                passwordRequirements.style.display = 'none';
+            }
+        }
+
+        passwordInput.addEventListener('input', () => {
+            validatePassword();
+            validatePasswordsMatch();
+            togglePasswordRequirements();
+        });
+
+        confirmPasswordInput.addEventListener('input', validatePasswordsMatch);
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Validate all fields
+            const formData = new FormData(form);
+            let isValid = true;
+
+            // Check if all required fields are filled
+            const requiredFields = ['first_name', 'last_name', 'phone', 'department', 'designation', 'username', 'password', 'confirm_password', 'terms'];
+            
+            for (let field of requiredFields) {
+                const element = document.getElementById(field);
+                if (!element.value.trim()) {
+                    element.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    element.classList.remove('is-invalid');
+                }
+            }
+
+            if (!isValid) {
+                alert('Please fill in all required fields.');
+                return false;
+            }
+
+            if (passwordInput.value !== confirmPasswordInput.value) {
+                confirmPasswordInput.classList.add('is-invalid');
+                alert('Passwords do not match!');
+                return false;
+            }
+
+            if (!validatePassword()) {
+                alert('Password does not meet the requirements!');
+                return false;
+            }
+
+            if (!document.getElementById('terms').checked) {
+                alert('Please agree to the terms and conditions.');
+                return false;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
+            form.submit();
+        });
+
+        // Initialize
+        togglePasswordRequirements();
+    </script>
+</body>
+</html>

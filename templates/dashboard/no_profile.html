@@ -1,0 +1,35 @@
+{% extends 'base/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="alert alert-warning" role="alert">
+                <div class="text-center">
+                    <i class="fas fa-exclamation-triangle fa-3x mb-3 text-warning"></i>
+                    <h2 class="alert-heading">Employee Profile Not Found</h2>
+                    <p>It appears that your employee profile hasn't been set up yet.</p>
+                    
+                    <div class="mt-4">
+                        <p class="mb-3">Please contact your HR department or administrator to:</p>
+                        <ul class="text-start d-inline-block">
+                            <li>Create your employee profile</li>
+                            <li>Assign your department and designation</li>
+                            <li>Verify your employment details</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <a href="{% url 'admin:index' %}" class="btn btn-primary me-2">
+                            <i class="fas fa-home"></i> Go to Admin
+                        </a>
+                        <a href="{% url 'admin:logout' %}" class="btn btn-secondary">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

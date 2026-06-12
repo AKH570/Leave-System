@@ -1,0 +1,338 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register | Leave Management System</title>
+    <link rel="stylesheet" href="{% static 'css/bootstrap-5.3.2.min.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/registration.css' %}"
+</head>
+<body>
+    <div class="login-page">
+        <div class="login-panel registration-panel">
+            <div class="login-card registration-card">
+                <!-- Header -->
+                <div class="registration-header">
+                    <img src="{% static 'assets/images/logos/logo.webp' %}" alt="Logo" class="registration-logo">
+                    <h2>Create Your Account</h2>
+                    <p>Join our Leave Management System and get started</p>
+                </div>
+
+                <!-- Messages -->
+                {% if messages %}
+                    <div class="alerts-container">
+                        {% for message in messages %}
+                            <div class="alert">
+                                <i class="fas fa-exclamation-circle"></i> {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <form method="post" class="registration-form" id="registrationForm" novalidate>
+                    {% csrf_token %}
+
+                    <!-- Display Form Errors -->
+                    {% if form.non_field_errors %}
+                        <div class="alerts-container">
+                            {% for error in form.non_field_errors %}
+                                <div class="alert">
+                                    <i class="fas fa-exclamation-circle"></i> {{ error }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <!-- Personal Information Section -->
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="fas fa-user-circle"></i> Personal Information
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="{{ form.first_name.id_for_label }}">
+                                    <i class="fas fa-pen"></i>
+                                    {{ form.first_name.label }}
+                                    <span class="required">*</span>
+                                </label>
+                                <div class="input-icon">
+                                    {{ form.first_name }}
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                {% if form.first_name.errors %}
+                                    <small class="text-danger">{{ form.first_name.errors.0 }}</small>
+                                {% endif %}
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="{{ form.last_name.id_for_label }}">
+                                    <i class="fas fa-pen"></i>
+                                    {{ form.last_name.label }}
+                                    <span class="required">*</span>
+                                </label>
+                                <div class="input-icon">
+                                    {{ form.last_name }}
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                {% if form.last_name.errors %}
+                                    <small class="text-danger">{{ form.last_name.errors.0 }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="{{ form.phone.id_for_label }}">
+                                    <i class="fas fa-phone"></i>
+                                    {{ form.phone.label }}
+                                    <span class="required">*</span>
+                                </label>
+                                <div class="input-icon">
+                                    {{ form.phone }}
+                                    <i class="fas fa-phone"></i>
+                                </div>
+                                {% if form.phone.errors %}
+                                    <small class="text-danger">{{ form.phone.errors.0 }}</small>
+                                {% else %}
+                                    <div class="form-label-hint">10-15 digits with optional + or -</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Professional Information Section -->
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="fas fa-briefcase"></i> Professional Information
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="{{ form.department.id_for_label }}">
+                                    <i class="fas fa-sitemap"></i>
+                                    {{ form.department.label }}
+                                    <span class="required">*</span>
+                                </label>
+                                {{ form.department }}
+                                {% if form.department.errors %}
+                                    <small class="text-danger">{{ form.department.errors.0 }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Account Information Section -->
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="fas fa-lock"></i> Account Information
+                        </div>
+
+                        <div class="form-row full">
+                            <div class="form-group">
+                                <label class="form-label" for="{{ form.username.id_for_label }}">
+                                    <i class="fas fa-at"></i>
+                                    {{ form.username.label }}
+                                    <span class="required">*</span>
+                                </label>
+                                <div class="input-icon">
+                                    {{ form.username }}
+                                    <i class="fas fa-user-tag"></i>
+                                </div>
+                                <div class="form-label-hint">3-150 characters, alphanumeric and underscores only</div>
+                                {% if form.username.errors %}
+                                    <small class="text-danger">{{ form.username.errors.0 }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="form-row full">
+                            <div class="form-group">
+                                <label class="form-label" for="{{ form.email.id_for_label }}">
+                                    <i class="fas fa-envelope"></i>
+                                    {{ form.email.label }}
+                                    <span class="required">*</span>
+                                </label>
+                                <div class="input-icon">
+                                    {{ form.email }}
+                                    <i class="fas fa-envelope"></i>
+                                </div>
+                                {% if form.email.errors %}
+                                    <small class="text-danger">{{ form.email.errors.0 }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="{{ form.password.id_for_label }}">
+                                    <i class="fas fa-key"></i>
+                                    {{ form.password.label }}
+                                    <span class="required">*</span>
+                                </label>
+                                <div class="input-icon">
+                                    {{ form.password }}
+                                    <i class="fas fa-lock"></i>
+                                </div>
+                                {% if form.password.errors %}
+                                    <small class="text-danger">{{ form.password.errors.0 }}</small>
+                                {% endif %}
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="{{ form.confirm_password.id_for_label }}">
+                                    <i class="fas fa-check-circle"></i>
+                                    {{ form.confirm_password.label }}
+                                    <span class="required">*</span>
+                                </label>
+                                <div class="input-icon">
+                                    {{ form.confirm_password }}
+                                    <i class="fas fa-lock"></i>
+                                </div>
+                                {% if form.confirm_password.errors %}
+                                    <small class="text-danger">{{ form.confirm_password.errors.0 }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="password-requirements" id="passwordRequirements" style="display: none;">
+                            <strong>
+                                <i class="fas fa-clipboard-check"></i>
+                                Password Requirements:
+                            </strong>
+                            <ul class="requirements-list">
+                                <li>
+                                    <span class="requirement-check" id="check-length">
+                                        <i class="fas fa-check"></i>
+                                    </span>
+                                    At least 8 characters
+                                </li>
+                                <li>
+                                    <span class="requirement-check" id="check-upper">
+                                        <i class="fas fa-check"></i>
+                                    </span>
+                                    One uppercase letter (A-Z)
+                                </li>
+                                <li>
+                                    <span class="requirement-check" id="check-lower">
+                                        <i class="fas fa-check"></i>
+                                    </span>
+                                    One lowercase letter (a-z)
+                                </li>
+                                <li>
+                                    <span class="requirement-check" id="check-number">
+                                        <i class="fas fa-check"></i>
+                                    </span>
+                                    One number (0-9)
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Terms Section -->
+                    <div class="terms-section">
+                        <div class="form-check">
+                            {{ form.terms_accepted }}
+                            <label class="form-check-label" for="{{ form.terms_accepted.id_for_label }}">
+                                {{ form.terms_accepted.label }}
+                            </label>
+                            {% if form.terms_accepted.errors %}
+                                <small class="text-danger d-block mt-2">{{ form.terms_accepted.errors.0 }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn-submit" id="submitBtn">
+                        <i class="fas fa-user-plus"></i>
+                        Create Account
+                    </button>
+                </form>
+
+                <div class="registration-footer">
+                    <p>Already have an account? <a href="{% url 'accounts:login' %}">Sign In Here</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('registrationForm');
+        const passwordInput = document.getElementById('id_password');
+        const confirmPasswordInput = document.getElementById('id_confirm_password');
+        const passwordRequirements = document.getElementById('passwordRequirements');
+        const submitBtn = document.getElementById('submitBtn');
+
+        const checks = {
+            length: document.getElementById('check-length'),
+            upper: document.getElementById('check-upper'),
+            lower: document.getElementById('check-lower'),
+            number: document.getElementById('check-number')
+        };
+
+        function validatePassword() {
+            const password = passwordInput.value;
+            
+            const hasLength = password.length >= 8;
+            const hasUpper = /[A-Z]/.test(password);
+            const hasLower = /[a-z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+
+            updateCheck('length', hasLength);
+            updateCheck('upper', hasUpper);
+            updateCheck('lower', hasLower);
+            updateCheck('number', hasNumber);
+
+            return hasLength && hasUpper && hasLower && hasNumber;
+        }
+
+        function updateCheck(checkName, isValid) {
+            if (isValid) {
+                checks[checkName].classList.add('active');
+            } else {
+                checks[checkName].classList.remove('active');
+            }
+        }
+
+        function validatePasswordsMatch() {
+            if (passwordInput.value && confirmPasswordInput.value) {
+                if (passwordInput.value !== confirmPasswordInput.value) {
+                    confirmPasswordInput.classList.add('is-invalid');
+                    return false;
+                } else {
+                    confirmPasswordInput.classList.remove('is-invalid');
+                    return true;
+                }
+            }
+            confirmPasswordInput.classList.remove('is-invalid');
+            return true;
+        }
+
+        function togglePasswordRequirements() {
+            if (passwordInput.value.length > 0) {
+                passwordRequirements.style.display = 'block';
+            } else {
+                passwordRequirements.style.display = 'none';
+            }
+        }
+
+        passwordInput.addEventListener('input', () => {
+            validatePassword();
+            validatePasswordsMatch();
+            togglePasswordRequirements();
+        });
+
+        confirmPasswordInput.addEventListener('input', validatePasswordsMatch);
+
+        form.addEventListener('submit', function(e) {
+            // Let Django handle the validation
+            // Just show loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
+        });
+
+        // Initialize
+        togglePasswordRequirements();
+    </script>
+</body>
+</html>

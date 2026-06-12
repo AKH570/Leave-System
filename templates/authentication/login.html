@@ -1,0 +1,67 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Leave Management System</title>
+    <link rel="stylesheet" href="{% static 'css/bootstrap-5.3.2.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+<body>
+    <div class="login-page">
+        <div class="login-panel">
+            <div class="login-illustration">
+                <h3>Welcome back</h3>
+                <p>Sign in to manage leave requests, attendance, departments and reports. 
+                Secure access for admins and HR managers.</p>
+                <!-- Decorative / illustrative area, could include an SVG or image -->
+            </div>
+
+            <div class="login-card">
+                <div class="login-brand">
+                    <img src="{% static 'assets/images/logos/logo.webp' %}" alt="Logo" class="login-logo">
+                    <h2>Leave Management System</h2>
+                    <p>Admin portal</p>
+                </div>
+
+                {% if messages %}
+                    <div class="login-alerts">
+                        {% for message in messages %}
+                            <div class="alert alert-danger" role="alert">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <form method="post" class="login-form">
+                    {% csrf_token %}
+                    <div class="mb-3 ">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" placeholder="Enter your username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
+                    </div>
+
+                    <div class="form-actions">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="" id="remember">
+                            <label class="form-check-label" for="remember">Remember me</label>
+                        </div>
+                        <a href="#">Forgot password?</a>
+                    </div>
+
+                    <div style="margin-top:16px">
+                        <button type="submit" class="btn btn-primary btn-login">Sign In</button>
+                    </div>
+                </form>
+
+                <div class="login-footer">
+                    <p>New to the system? <a href="{% url 'accounts:register' %}">Create an account</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

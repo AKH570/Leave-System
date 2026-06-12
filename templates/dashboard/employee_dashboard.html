@@ -1,0 +1,123 @@
+{% extends 'base/base.html' %}
+
+{% block content %}
+    <div class="main-content">
+        
+        <!-- Topbar -->
+        <div class="topbar d-flex justify-content-between align-items-center">
+            <div>
+                <h4>Hi {{ user.first_name }}</h4>
+                <p class="text-muted mb-0">Your Leave Management Dashboard</p>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <div class="text-end">
+                    <small class="text-muted">Today</small>
+                    <h6 class="mb-0">{{ "now"|date:"d M Y" }}</h6>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="dashboard-row">
+            <div class="dashboard-col col-12 col-md-6">
+                <div class="card-box bg-blue">
+                    <div class="dashboard-card-title">
+                        <h5>Leave Balance</h5>
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <h2>{{ leave_balance|default:"0" }}</h2>
+                    <p class="mb-0">Days available for leave</p>
+                </div>
+            </div>
+
+            <div class="dashboard-col col-12 col-md-6">
+                <div class="card-box bg-green">
+                    <div class="dashboard-card-title">
+                        <h5>Used Leave</h5>
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <h2>{{ used_leave|default:"0" }}</h2>
+                    <p class="mb-0">Days utilized this year</p>
+                </div>
+            </div>
+
+            <div class="dashboard-col col-12 col-md-6">
+                <div class="card-box bg-orange">
+                    <div class="dashboard-card-title">
+                        <h5>Pending Requests</h5>
+                        <i class="fas fa-hourglass-half"></i>
+                    </div>
+                    <h2>{{ pending_count|default:"0" }}</h2>
+                    <p class="mb-0">Awaiting manager approval</p>
+                </div>
+            </div>
+
+            <div class="dashboard-col col-12 col-md-6">
+                <div class="card-box bg-red">
+                    <div class="dashboard-card-title">
+                        <h5>Approved Requests</h5>
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h2>{{ approved_count|default:"0" }}</h2>
+                    <p class="mb-0">Successfully approved leaves</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leave Request Table -->
+        <div class="table-section">
+            <div class="table-actions">
+                <div>
+                    <h5>My Leave History</h5>
+                    <p class="text-muted mb-0">Track all your leave requests and approvals.</p>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Leave Type</th>
+                            <th>Date Range</th>
+                            <th>Days</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for leave in leave_history %}
+                        <tr>
+                            <td>{{ leave.leave_type }}</td>
+                            <td>{{ leave.from_date|date:"d M" }} - {{ leave.to_date|date:"d M, Y" }}</td>
+                            <td class="fw-bold">{{ leave.total_days }}</td>
+                            <td>
+                                <span class="status-pill {% if leave.status == 'PENDING' %}pending{% elif leave.status == 'APPROVED' %}approved{% else %}rejected{% endif %}">
+                                    {{ leave.status }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if leave.status == 'PENDING' %}
+                                <div class="action-btns">
+                                    <a href="{% url 'leave_cancel' leave.pk %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to cancel this request?')">
+                                        <i class="fas fa-times me-1"></i> Cancel
+                                    </a>
+                                </div>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">
+                                <i class="fas fa-inbox text-muted me-2"></i>No leave history found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+{% endblock %}

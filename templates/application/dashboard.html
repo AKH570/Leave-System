@@ -1,0 +1,61 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Leave Management</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+</head>
+{% block styles %}
+    <!-- Bootstrap core CSS -->
+    <link href="https://getbootstrap.com/docs/4.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{% static 'css/dashboard.css' %}" rel="stylesheet">
+{% endblock %}
+
+  <body>
+    <div class="container-fluid">
+      <div class="row">
+        <!-- Vertical Navigation Sidebar -->
+        <nav class="col-md-2 d-none d-md-block sidebar">
+          <div class="sidebar-sticky">
+            <div class="sidebar-heading">Leave Manager</div>
+            <ul class="nav flex-column">
+              <li class="nav-item">
+                <a class="nav-link" href="/admin">Admin</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="">Login</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'accounts:logout' %}">Logout</a>
+              </li>
+            </ul>
+          </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main role="main" class="col-md-10 ml-sm-auto px-4">
+          <h1 class="h2">Pending list</h1>
+          <hr>
+          
+          <div class="card p-4 mb-4">
+              <h4 class="card-title">Leave Request Overview</h4>
+              <p class="card-text">Your name is: </p>
+              <p class="card-text text-muted small">Last login: </p>
+              <p class="text-danger font-weight-bold">You are not logged in.</p>
+              <a href="" class="btn btn-primary w-25">More detail</a>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery-slim.min.js"><\/script>')</script>
+    <script src="https://getbootstrap.com/docs/4.0/assets/js/vendor/popper.min.js"></script>
+    <script src="https://getbootstrap.com/docs/4.0/dist/js/bootstrap.min.js"></script>
+  </body>
+</html>

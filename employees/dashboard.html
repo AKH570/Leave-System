@@ -1,0 +1,117 @@
+{% extends "base/base.html" %}
+
+{% block title %}Dashboard - LeaveMS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <h2>Welcome back, {{ user.get_full_name|default:user.username }}</h2>
+        <p class="text-muted">Overview of your leave status and activity.</p>
+    </div>
+</div>
+
+{% if is_admin %}
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h5 class="card-title">Pending Requests</h5>
+                <h2 class="display-4">{{ pending_requests_count }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h5 class="card-title">Total Employees</h5>
+                <h2 class="display-4">{{ total_employees_count }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if pending_requests %}
+<div class="card mb-4">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">Latest Pending Requests</h5>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Employee</th>
+                    <th>Type</th>
+                    <th>Dates</th>
+                    <th>Days</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for leave in pending_requests %}
+                <tr>
+                    <td>{{ leave.employee }}</td>
+                    <td>{{ leave.leave_type.name }}</td>
+                    <td>{{ leave.from_date }} - {{ leave.to_date }}</td>
+                    <td>{{ leave.total_days }}</td>
+                    <td>
+                        <a href="{% url 'leave_detail' leave.pk %}" class="btn btn-sm btn-outline-primary">Review</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endif %}
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">My Recent Requests</h5>
+                <a href="{% url 'leave_history' %}" class="btn btn-sm btn-link">View All</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Dates</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for leave in recent_leaves %}
+                        <tr>
+                            <td>{{ leave.leave_type.name }}</td>
+                            <td>{{ leave.from_date }} - {{ leave.to_date }}</td>
+                            <td>
+                                <span class="badge bg-{% if leave.status == 'APPROVED' %}success{% elif leave.status == 'PENDING' %}warning{% elif leave.status == 'REJECTED' %}danger{% else %}secondary{% endif %}">
+                                    {{ leave.status }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center py-4">No recent leave requests found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body d-grid gap-2">
+                <a href="{% url 'leave_apply' %}" class="btn btn-primary">Apply for Leave</a>
+                <a href="{% url 'leave_history' %}" class="btn btn-outline-secondary">Check Balance</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

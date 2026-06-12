@@ -1,0 +1,416 @@
+:root {
+    --bg-1: #f8fafc;
+    --bg-2: #e2e8f0;
+    --card-bg: #ffffff;
+    --muted: #64748b;
+    --accent: #7f26d9;
+    --accent-dark: #6138b7;
+    --input-bg: #f8fafc;
+    --success: #4ade80;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    min-height: 100vh;
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    background: radial-gradient(1000px 400px at 10% 10%, rgba(127,38,217,0.05), transparent 18%),
+                linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
+    color: #1e293b;
+}
+
+.registration-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 1.5rem;
+}
+
+.registration-wrapper {
+    width: 100%;
+    max-width: 500px;
+}
+
+.registration-card {
+    background: var(--card-bg);
+    border-radius: 1.2rem;
+    padding: 1.5rem 2rem;
+    border: 1px solid rgba(0,0,0,0.05);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+}
+
+.registration-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.registration-logo {
+    width: 70px;
+    height: 70px;
+    display: block;
+    margin: 0 auto 1rem;
+    background: linear-gradient(135deg, rgba(127,38,217,0.2), rgba(97,56,183,0.1));
+    border-radius: 50%;
+    padding: 15px;
+}
+
+.registration-header h2 {
+    color: #0f172a;
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.registration-header p {
+    color: var(--muted);
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.form-section {
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 1.2rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 1px solid rgba(127,38,217,0.2);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.section-title i {
+    font-size: 1rem;
+}
+
+.form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    margin-bottom: 1.2rem;
+}
+
+.form-row.full {
+    grid-template-columns: 1fr;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.form-label .required {
+    color: #ff6b6b;
+    font-weight: 700;
+}
+
+.form-label-hint {
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-weight: 400;
+    margin-top: 0.3rem;
+}
+
+.form-control {
+    background: var(--input-bg);
+    border: 1.5px solid rgba(255,255,255,0.06);
+    color: #e6eef8;
+    border: 1.5px solid #e2e8f0;
+    color: #1e293b;
+    padding: 0.95rem 1.1rem;
+    border-radius: 0.8rem;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+/* Fix for dropdown options visibility in dark theme */
+    color: #e6eef8;
+    background-color: #ffffff;
+    color: #1e293b;
+}
+
+.form-control::placeholder {
+    color: rgba(230,238,248,0.45);
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: rgba(255,255,255,0.05);
+    background: #ffffff;
+}
+
+.form-control.is-invalid {
+    border-color: #ff6b6b;
+    box-shadow: 0 0 0 3px rgba(255,107,107,0.15);
+}
+
+.input-icon {
+    position: relative;
+}
+
+.input-icon i {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 0.95rem;
+    pointer-events: none;
+}
+
+.input-icon .form-control {
+    padding-right: 2.8rem;
+}
+
+.password-requirements {
+    background: linear-gradient(135deg, rgba(127,38,217,0.08), rgba(127,38,217,0.04));
+    border: 1.5px solid rgba(127,38,217,0.2);
+    border-radius: 0.8rem;
+    padding: 1.1rem;
+    margin-top: 0.8rem;
+    font-size: 0.85rem;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+    color: #e6eef8;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.7rem;
+}
+
+.requirements-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.5rem;
+}
+
+.requirements-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    color: var(--muted);
+}
+
+.requirement-check {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    border: 1.5px solid rgba(74,222,128,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    color: transparent;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.requirement-check.active {
+    background: rgba(74,222,128,0.15);
+    border-color: var(--success);
+    color: var(--success);
+}
+
+.terms-section {
+    background: linear-gradient(135deg, rgba(127,38,217,0.05), transparent);
+    border-radius: 0.8rem;
+    padding: 1rem;
+    margin: 1.5rem 0;
+    border: 1px solid rgba(127,38,217,0.1);
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.form-check-input {
+    width: 20px;
+    border: 1.5px solid rgba(255,255,255,0.1);
+    background-color: #ffffff;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.form-check-input:hover {
+    border-color: var(--accent);
+}
+
+.form-check-input:checked {
+    background-color: var(--accent);
+    border-color: var(--accent);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100%;
+}
+
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.25rem rgba(53, 12, 236, 0.25);
+}
+
+.form-check-label {
+    color: #e6eef8;
+    color: #334155;
+    font-size: 0.9rem;
+    cursor: pointer;
+    margin: 0;
+    flex: 1;
+}
+
+.form-check-label a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.form-check-label a:hover {
+    text-decoration: underline;
+}
+
+.btn-submit {
+    background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+    border: none;
+    color: #fff;
+    padding: 1rem 2rem;
+    font-weight: 700;
+    border-radius: 0.85rem;
+    width: 100%;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 12px 30px rgba(127,38,217,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+}
+
+.btn-submit:hover {
+    background: linear-gradient(90deg, var(--accent-dark), #4a2aa0);
+    box-shadow: 0 15px 40px rgba(127,38,217,0.3);
+    transform: translateY(-2px);
+}
+
+.registration-footer {
+    margin-top: 2rem;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.95rem;
+}
+
+.registration-footer a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.registration-footer a:hover {
+    text-decoration: underline;
+}
+
+/* Error Message Styles */
+.text-danger {
+    color: #ff6b6b;
+    font-size: 0.85rem;
+    display: block;
+    margin-top: 0.4rem;
+    animation: slideDown 0.3s ease;
+}
+
+.form-control.is-invalid,
+.form-control:invalid {
+    border-color: #ff6b6b;
+    box-shadow: 0 0 0 3px rgba(255,107,107,0.15);
+}
+
+.alerts-container {
+    margin-bottom: 1.5rem;
+}
+
+.alerts-container .alert {
+    color: #991b1b;
+    padding: 0.9rem 1rem;
+    margin-bottom: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    animation: slideDown 0.3s ease;
+}
+
+.alerts-container .alert i {
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+    .registration-card {
+        padding: 1.8rem;
+    }
+
+    .registration-header h2 {
+        font-size: 24px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 1.2rem;
+    }
+
+    .form-control {
+        padding: 0.85rem 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .registration-container {
+        padding: 1rem;
+    }
+
+    .registration-card {
+        padding: 1.2rem;
+    }
+
+    .registration-header h2 {
+        font-size: 20px;
+    }
+
+    .btn-submit {
+        padding: 0.9rem 1.5rem;
+        font-size: 0.95rem;
+    }
+}

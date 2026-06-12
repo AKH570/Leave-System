@@ -1,0 +1,226 @@
+employee_leave_management/
+│
+├── manage.py
+│
+├── requirements.txt
+│
+├── db.sqlite3
+│
+├── static/
+│   │
+│   ├── css/
+│   │   ├── style.css
+│   │   ├── dashboard.css
+│   │   └── login.css
+│   │
+│   ├── js/
+│   │   ├── main.js
+│   │   ├── dashboard.js
+│   │   └── chart.js
+│   │
+│   ├── images/
+│   │   ├── logo.png
+│   │   ├── avatar.png
+│   │   └── bg.jpg
+│   │
+│   ├── vendor/
+│   │   ├── bootstrap/
+│   │   ├── fontawesome/
+│   │   └── adminlte/
+│   │
+│   └── uploads/
+│
+├── media/
+│   │
+│   ├── profile_photos/
+│   └── leave_documents/
+│
+├── templates/
+│   │
+│   ├── base/
+│   │   ├── base.html
+│   │   ├── navbar.html
+│   │   ├── sidebar.html
+│   │   ├── footer.html
+│   │   └── messages.html
+│   │
+│   ├── authentication/
+│   │   ├── login.html
+│   │   ├── register.html
+│   │   ├── forgot_password.html
+│   │   └── change_password.html
+│   │
+│   ├── dashboard/
+│   │   ├── admin_dashboard.html
+│   │   └── employee_dashboard.html
+│   │
+│   ├── employees/
+│   │   ├── employee_list.html
+│   │   ├── employee_detail.html
+│   │   ├── add_employee.html
+│   │   ├── edit_employee.html
+│   │   └── profile.html
+│   │
+│   ├── leaves/
+│   │   ├── apply_leave.html
+│   │   ├── leave_history.html
+│   │   ├── leave_requests.html
+│   │   ├── leave_approval.html
+│   │   ├── leave_balance.html
+│   │   └── leave_report.html
+│   │
+│   ├── departments/
+│   │   ├── department_list.html
+│   │   ├── add_department.html
+│   │   └── edit_department.html
+│   │
+│   ├── attendance/
+│   │   ├── attendance_list.html
+│   │   └── attendance_report.html
+│   │
+│   ├── holidays/
+│   │   ├── holiday_list.html
+│   │   └── add_holiday.html
+│   │
+│   ├── settings/
+│   │   └── system_settings.html
+│   │
+│   └── errors/
+│       ├── 404.html
+│       └── 500.html
+│
+├── employee_leave_management/
+│   │
+│   ├── __init__.py
+│   ├── asgi.py
+│   ├── wsgi.py
+│   ├── urls.py
+│   ├── settings.py
+│   └── permissions.py
+│
+├── accounts/
+│   │
+│   ├── migrations/
+│   │
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── models.py
+│   ├── urls.py
+│   ├── views.py
+│   ├── forms.py
+│   ├── signals.py
+│   ├── tests.py
+│   └── decorators.py
+│
+├── employees/
+│   │
+│   ├── migrations/
+│   │
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── models.py
+│   ├── urls.py
+│   ├── views.py
+│   ├── forms.py
+│   ├── filters.py
+│   └── tests.py
+│
+├── leaves/
+│   │
+│   ├── migrations/
+│   │
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── models.py
+│   ├── urls.py
+│   ├── views.py
+│   ├── forms.py
+│   ├── filters.py
+│   ├── signals.py
+│   └── tests.py
+│
+├── departments/
+│   │
+│   ├── migrations/
+│   │
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── models.py
+│   ├── urls.py
+│   ├── views.py
+│   └── forms.py
+│
+├── attendance/
+│   │
+│   ├── migrations/
+│   │
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── models.py
+│   ├── urls.py
+│   ├── views.py
+│   └── forms.py
+│
+├── holidays/
+│   │
+│   ├── migrations/
+│   │
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── models.py
+│   ├── urls.py
+│   ├── views.py
+│   └── forms.py
+│
+├── reports/
+│   │
+│   ├── migrations/
+│   │
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── urls.py
+│   ├── views.py
+│   └── utils.py
+│
+└── utils/
+    │
+    ├── email.py
+    ├── helpers.py
+    ├── constants.py
+    └── validators.py
+
+AUTH_USER_MODEL = 'employees.User'
+
+from django.contrib import admin
+from .models import *
+
+admin.site.register(User)
+admin.site.register(Employee)
+admin.site.register(Department)
+admin.site.register(LeaveType)
+admin.site.register(Leave)
+admin.site.register(Attendance)
+admin.site.register(Holiday)
+
+python manage.py makemigrations
+python manage.py migrate
+
+You can later add:
+
+Email notification
+Leave balance calculation
+Multi-level approval
+Payroll integration
+Public holidays auto deduction
+Team leave calendar
+PDF leave reports
+REST API
+AJAX approval system
+Employee self-service portal
