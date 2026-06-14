@@ -6,8 +6,8 @@ from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, TemplateView
-from .models import Employee, LeaveRequest, LeaveType
-from .forms import LeaveRequestForm, LeaveApprovalForm, LeaveTypeForm
+from .models import EmpProfile, Employee, LeaveRequest, LeaveType
+from .forms import EmpProfileForm, LeaveRequestForm, LeaveApprovalForm, LeaveTypeForm
 
 class AdminAccessMixin(UserPassesTestMixin):
     """Ensures only Admin/HR can access certain views."""
@@ -92,16 +92,55 @@ class LeaveDetailView(LoginRequiredMixin, DetailView):
     template_name = 'leaves/leave_detail.html'
     context_object_name = 'leave'
 
-class EmployeeProfileView(LoginRequiredMixin, TemplateView):
-    template_name = 'employees/profile.html'
+class EmployeeProfileMixin(LoginRequiredMixin):
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return super().dispatch(request, *args, **kwargs)
+
+        try:
+            self.employee = Employee.objects.select_related(
+                'user',
+                'department',
+                'supervisor__user',
+            ).get(user=request.user)
+        except Employee.DoesNotExist:
+            messages.error(request, 'Employee profile not found. Please contact Admin.')
+            return redirect('dashboard')
+        return super().dispatch(request, *args, **kwargs)
+
+class EmployeeProfileView(EmployeeProfileMixin, TemplateView):
+    template_name = 'employees/my_profile.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        try:
-            context['employee'] = self.request.user.employee_profile
-        except Employee.DoesNotExist:
-            context['employee'] = None
+        profile, _ = EmpProfile.objects.get_or_create(employee=self.employee)
+        context['employee'] = self.employee
+        context['profile'] = profile
         return context
+
+class EmployeeProfileUpdateView(EmployeeProfileMixin, UpdateView):
+    model = EmpProfile
+    form_class = EmpProfileForm
+    template_name = 'employees/edit_profile.html'
+    success_url = reverse_lazy('employee_profile')
+
+    def get_object(self, queryset=None):
+        profile, _ = EmpProfile.objects.get_or_create(employee=self.employee)
+        return profile
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['employee'] = self.employee
+        context['messages_in_content'] = True
+        return context
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Your profile has been updated successfully.')
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        messages.error(self.request, 'Please correct the errors below.')
+        return super().form_invalid(form)
 
 class EmployeeDetailView(LoginRequiredMixin, AdminAccessMixin, DetailView):
     model = Employee

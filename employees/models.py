@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.core.validators import FileExtensionValidator, RegexValidator
 from django.utils import timezone
 from django.conf import settings
 from django.db.models import Sum
@@ -36,6 +37,79 @@ class Employee(models.Model):
 
     def __str__(self):
         return f"{self.user.get_full_name()} ({self.employee_id})"
+
+class EmpProfile(models.Model):
+    GENDER_CHOICES = (
+        ('MALE', 'Male'),
+        ('FEMALE', 'Female'),
+    )
+    BLOOD_GROUP_CHOICES = (
+        ('A+', 'A+'), ('A-', 'A-'),
+        ('B+', 'B+'), ('B-', 'B-'),
+        ('AB+', 'AB+'), ('AB-', 'AB-'),
+        ('O+', 'O+'), ('O-', 'O-'),
+    )
+
+    employee = models.OneToOneField(
+        Employee,
+        on_delete=models.CASCADE,
+        related_name='extended_profile',
+    )
+    identification_no = models.CharField(
+        'Identification number',
+        max_length=100,
+        blank=True,
+        validators=[
+            RegexValidator(
+                regex=r'^[A-Za-z0-9][A-Za-z0-9\-/\s]*$',
+                message='Enter a valid NID, passport, birth certificate, or other identification number.',
+            )
+        ],
+        help_text='Enter a NID, passport, birth certificate, or other identification number.',
+    )
+    gender = models.CharField(
+        max_length=20,
+        choices=GENDER_CHOICES,
+        blank=True,
+    )
+    profile_picture = models.ImageField(
+        upload_to='employee_profiles/pictures/',
+        blank=True,
+        null=True,
+        validators=[FileExtensionValidator(['jpg', 'jpeg', 'png', 'webp'])],
+    )
+    date_of_birth = models.DateField(blank=True, null=True)
+    blood_group = models.CharField(
+        max_length=3,
+        choices=BLOOD_GROUP_CHOICES,
+        blank=True,
+    )
+    nationality = models.CharField(max_length=80, blank=True)
+    present_address = models.TextField(blank=True)
+    permanent_address = models.TextField(blank=True)
+    emergency_contact_number = models.CharField(
+        max_length=15,
+        blank=True,
+        validators=[
+            RegexValidator(
+                regex=r'^[0-9+\-\s()]{10,15}$',
+                message='Enter a valid emergency contact number (10-15 characters).',
+            )
+        ],
+    )
+    emergency_contact_name = models.CharField(max_length=120, blank=True)
+    emergency_contact_relationship = models.CharField(max_length=80, blank=True)
+    bio = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def clean(self):
+        super().clean()
+        if self.date_of_birth and self.date_of_birth > timezone.localdate():
+            raise ValidationError({'date_of_birth': 'Date of birth cannot be in the future.'})
+
+    def __str__(self):
+        return f"Profile - {self.employee}"
 
 class LeaveType(models.Model):
     name = models.CharField(max_length=100, unique=True)

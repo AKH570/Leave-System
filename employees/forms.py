@@ -1,5 +1,5 @@
 from django import forms
-from .models import LeaveRequest, LeaveType, Employee
+from .models import EmpProfile, LeaveRequest, LeaveType, Employee
 from accounts.models import Registration
 from django.contrib.auth import get_user_model
 
@@ -92,3 +92,52 @@ class EmployeeProfileForm(forms.ModelForm):
             'supervisor': forms.Select(attrs={'class': 'form-select'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+
+class EmpProfileForm(forms.ModelForm):
+    MAX_PROFILE_PICTURE_SIZE = 5 * 1024 * 1024
+
+    class Meta:
+        model = EmpProfile
+        fields = [
+            'profile_picture',
+            'identification_no',
+            'gender',
+            'date_of_birth',
+            'blood_group',
+            'nationality',
+            'present_address',
+            'permanent_address',
+            'emergency_contact_name',
+            'emergency_contact_relationship',
+            'emergency_contact_number',
+            'bio',
+        ]
+        widgets = {
+            'profile_picture': forms.ClearableFileInput(attrs={
+                'class': 'form-control',
+                'accept': 'image/jpeg,image/png,image/webp',
+            }),
+            'identification_no': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'NID, passport, birth certificate, or other number',
+            }),
+            'gender': forms.Select(attrs={'class': 'form-select'}),
+            'date_of_birth': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'blood_group': forms.Select(attrs={'class': 'form-select'}),
+            'nationality': forms.TextInput(attrs={'class': 'form-control'}),
+            'present_address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'permanent_address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'emergency_contact_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'emergency_contact_relationship': forms.TextInput(attrs={'class': 'form-control'}),
+            'emergency_contact_number': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g. +880 1700 000000',
+            }),
+            'bio': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+        }
+
+    def clean_profile_picture(self):
+        picture = self.cleaned_data.get('profile_picture')
+        if picture and picture.size > self.MAX_PROFILE_PICTURE_SIZE:
+            raise forms.ValidationError('Profile picture must be 5 MB or smaller.')
+        return picture

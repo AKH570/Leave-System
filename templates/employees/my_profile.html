@@ -1,0 +1,77 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/my_profile.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="my-profile-page">
+    <section class="my-profile-hero">
+        {% if profile.profile_picture %}
+            <img src="{{ profile.profile_picture.url }}" alt="{{ user.get_full_name|default:user.username }} profile picture" class="my-profile-avatar">
+        {% else %}
+            <img src="{% static 'images/avatar.png' %}" alt="{{ user.get_full_name|default:user.username }} profile picture" class="my-profile-avatar">
+        {% endif %}
+        <div class="my-profile-intro">
+            <span>{{ employee.employee_id }}</span>
+            <h1>{{ user.get_full_name|default:user.username }}</h1>
+            <p>{{ employee.designation|default:"Employee" }}{% if employee.department %} · {{ employee.department }}{% endif %}</p>
+        </div>
+        <a href="{% url 'employee_profile_edit' %}" class="btn my-profile-edit-button">
+            <span aria-hidden="true">✎</span>
+            Edit profile
+        </a>
+    </section>
+
+    <section class="my-profile-grid">
+        <article class="my-profile-card">
+            <div class="my-profile-card-heading">
+                <h2>Account and employment</h2>
+                <p>Managed by your organization</p>
+            </div>
+            <dl class="my-profile-details">
+                <div><dt>Full name</dt><dd>{{ user.get_full_name|default:"Not provided" }}</dd></div>
+                <div><dt>Username</dt><dd>{{ user.username }}</dd></div>
+                <div><dt>Email</dt><dd>{{ user.email|default:"Not provided" }}</dd></div>
+                <div><dt>Mobile number</dt><dd>{{ user.phone|default:"Not provided" }}</dd></div>
+                <div><dt>Employee ID</dt><dd>{{ employee.employee_id }}</dd></div>
+                <div><dt>Designation</dt><dd>{{ employee.designation|default:"Employee" }}</dd></div>
+                <div><dt>Department</dt><dd>{{ employee.department|default:"Not assigned" }}</dd></div>
+                <div><dt>Role</dt><dd>{{ user.get_role_display|default:"Employee" }}</dd></div>
+                <div><dt>Joining date</dt><dd>{{ employee.joining_date|date:"d F Y" }}</dd></div>
+                <div><dt>Supervisor</dt><dd>{% if employee.supervisor %}{{ employee.supervisor.user.get_full_name|default:employee.supervisor.user.username }}{% else %}Not assigned{% endif %}</dd></div>
+            </dl>
+        </article>
+
+        <article class="my-profile-card">
+            <div class="my-profile-card-heading">
+                <h2>Additional profile details</h2>
+                <p>Information you can update</p>
+            </div>
+            <dl class="my-profile-details">
+                <div><dt>Gender</dt><dd>{{ profile.get_gender_display|default:"Not provided" }}</dd></div>
+                <div><dt>Date of birth</dt><dd>{{ profile.date_of_birth|date:"d F Y"|default:"Not provided" }}</dd></div>
+                <div><dt>Blood group</dt><dd>{{ profile.blood_group|default:"Not provided" }}</dd></div>
+                <div><dt>Nationality</dt><dd>{{ profile.nationality|default:"Not provided" }}</dd></div>
+                <div><dt>Emergency contact</dt><dd>{{ profile.emergency_contact_number|default:"Not provided" }}</dd></div>
+                <div><dt>Emergency contact name</dt><dd>{{ profile.emergency_contact_name|default:"Not provided" }}</dd></div>
+                <div><dt>Relationship</dt><dd>{{ profile.emergency_contact_relationship|default:"Not provided" }}</dd></div>
+                <div><dt>Identification number</dt><dd>{{ profile.identification_no|default:"Not provided" }}</dd></div>
+            </dl>
+        </article>
+    </section>
+
+    <section class="my-profile-card my-profile-wide-card">
+        <div class="my-profile-card-heading">
+            <h2>Addresses and bio</h2>
+            <p>Your personal profile information</p>
+        </div>
+        <div class="my-profile-text-grid">
+            <div><span>Present address</span><p>{{ profile.present_address|default:"Not provided"|linebreaksbr }}</p></div>
+            <div><span>Permanent address</span><p>{{ profile.permanent_address|default:"Not provided"|linebreaksbr }}</p></div>
+            <div class="my-profile-bio"><span>Bio</span><p>{{ profile.bio|default:"Not provided"|linebreaksbr }}</p></div>
+        </div>
+    </section>
+</div>
+{% endblock %}

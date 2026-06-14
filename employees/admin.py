@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Employee, LeaveType, LeaveRequest
+from .models import EmpProfile, Employee, LeaveType, LeaveRequest
 from accounts.models import Registration
 
 @admin.register(Employee)
@@ -12,6 +12,19 @@ class EmployeeAdmin(admin.ModelAdmin):
     def get_full_name(self, obj):
         return obj.user.get_full_name()
     get_full_name.short_description = 'Name'
+
+@admin.register(EmpProfile)
+class EmpProfileAdmin(admin.ModelAdmin):
+    list_display = ('employee', 'identification_no', 'gender', 'emergency_contact_number', 'updated_at')
+    search_fields = (
+        'employee__employee_id',
+        'employee__user__first_name',
+        'employee__user__last_name',
+        'identification_no',
+        'emergency_contact_number',
+    )
+    list_filter = ('gender', 'blood_group')
+    readonly_fields = ('created_at', 'updated_at')
 
 @admin.register(LeaveType)
 class LeaveTypeAdmin(admin.ModelAdmin):
