@@ -12,6 +12,11 @@ class LeaveRequestForm(forms.ModelForm):
         widget=forms.Select(attrs={'class': 'form-select'}),
     )
 
+    def __init__(self, *args, employee=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if employee is not None:
+            self.instance.employee = employee
+
     class Meta:
         model = LeaveRequest
         fields = ['leave_type', 'from_date', 'to_date', 'reason']

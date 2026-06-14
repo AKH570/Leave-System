@@ -1,0 +1,31 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="profile-page">
+    <section class="profile-card">
+        <div class="profile-card-header">
+            <img src="{% static 'images/avatar.png' %}" alt="{{ user.get_full_name|default:user.username }} profile picture" class="profile-page-avatar">
+            <div>
+                <h2>{{ user.get_full_name|default:user.username }}</h2>
+                <p>
+                    {% if employee and employee.designation %}
+                        {{ employee.designation }}
+                    {% elif user.is_superuser or user.is_staff or user.role == 'ADMIN' %}
+                        Admin
+                    {% else %}
+                        {{ user.get_role_display|default:"Employee" }}
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <div class="profile-details-grid">
+            <div><span>Email</span><strong>{{ user.email|default:"Not provided" }}</strong></div>
+            <div><span>Phone</span><strong>{{ user.phone|default:"Not provided" }}</strong></div>
+            <div><span>Employee ID</span><strong>{% if employee %}{{ employee.employee_id }}{% else %}Not assigned{% endif %}</strong></div>
+            <div><span>Department</span><strong>{% if employee.department %}{{ employee.department }}{% else %}Not assigned{% endif %}</strong></div>
+        </div>
+    </section>
+</div>
+{% endblock %}

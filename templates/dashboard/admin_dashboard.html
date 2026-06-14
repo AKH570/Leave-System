@@ -5,7 +5,7 @@
     <div class="main-content">
 
         <!-- Topbar -->
-        <div class="topbar d-flex justify-content-between align-items-center">
+        <!-- <div class="topbar d-flex justify-content-between align-items-center">
 
             <div>
                 <h4>Hi {{ user.first_name}}</h4>
@@ -15,12 +15,11 @@
             <div class="d-flex align-items-center gap-3">
                 <div class="text-end">
                     <small class="text-muted">Today</small>
-                    <h6 class="mb-0">19 May 2026</h6>
+                    <h6 class="mb-0">{{ today|date:"d M Y" }}</h6>
                 </div>
-                <!-- <img src="{% static 'assets/images/homepage-one/icon.png' %}" class="profile-img"> -->
             </div>
 
-        </div>
+        </div> -->
 
         <!-- Summary Cards -->
         <div class="dashboard-row">
@@ -30,8 +29,8 @@
                         <h5>Total Employees</h5>
                         <i class="fas fa-users"></i>
                     </div>
-                    <h2>120</h2>
-                    <p class="mb-0">+8.2% from last month</p>
+                    <h2>{{ total_employees|default:"0" }}</h2>
+                    <p class="mb-0">Registered employee profiles</p>
                 </div>
             </div>
 
@@ -41,8 +40,8 @@
                         <h5>Approved Leaves</h5>
                         <i class="fas fa-check-circle"></i>
                     </div>
-                    <h2>45</h2>
-                    <p class="mb-0">82% approval rate</p>
+                    <h2>{{ approved_this_month|default:"0" }}</h2>
+                    <p class="mb-0">Approved this month</p>
                 </div>
             </div>
 
@@ -52,7 +51,7 @@
                         <h5>Pending Requests</h5>
                         <i class="fas fa-hourglass-half"></i>
                     </div>
-                    <h2>12</h2>
+                    <h2>{{ pending_requests_count|default:"0" }}</h2>
                     <p class="mb-0">Waiting for manager action</p>
                 </div>
             </div>
@@ -63,7 +62,7 @@
                         <h5>Rejected Leaves</h5>
                         <i class="fas fa-times-circle"></i>
                     </div>
-                    <h2>8</h2>
+                    <h2>{{ rejected_this_month|default:"0" }}</h2>
                     <p class="mb-0">Declined this month</p>
                 </div>
             </div>
@@ -143,81 +142,74 @@
                 </div> -->
             </div>
 
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover align-middle">
-                    <thead class="table-dark">
+            <div class="table-responsive dashboard-table-wrap" tabindex="0" aria-label="Recent leave requests table">
+                <table class="table dashboard-table">
+                    <!-- <caption class="visually-hidden">Recent leave requests with employee, department, dates, reason, status, and available actions.</caption> -->
+                    <thead>
                         <tr>
-                            <th>Employee</th>
-                            <th>Department</th>
-                            <th>Leave Type</th>
-                            <th>From</th>
-                            <th>To</th>
-                            <th>Days</th>
-                            <th>Status</th>
-                            <th>Action</th>
+                            <th scope="col" class="col-employee">Employee</th>
+                            <th scope="col" class="col-department">Dept.</th>
+                            <th scope="col" class="col-type">Leave Type</th>
+                            <th scope="col" class="col-date">From</th>
+                            <th scope="col" class="col-date">To</th>
+                            <th scope="col" class="col-days text-center">Days</th>
+                            <th scope="col" class="col-reason">Reason</th>
+                            <th scope="col" class="col-applied">Applied on</th>
+                            <th scope="col" class="col-status">Status</th>
+                            <th scope="col" class="col-action text-end">Action</th>
                         </tr>
                     </thead>
                     <tbody>
+                        {% for leave in recent_requests %}
                         <tr>
-                            <td>John Doe</td>
-                            <td>IT</td>
-                            <td>Casual Leave</td>
-                            <td>12 Jul 2026</td>
-                            <td>15 Jul 2026</td>
-                            <td>3</td>
-                            <td><span class="badge bg-warning status-pill pending">Pending</span></td>
-                            <td>
-                                <div class="d-flex gap-2 action-btns">
-                                    <button class="btn btn-success btn-sm">Approve</button>
-                                    <button class="btn btn-danger btn-sm">Reject</button>
+                            <th scope="row" class="col-employee">
+                                <div class="leave-employee-cell">
+                                    <span class="leave-employee-name text-truncate" title="{{ leave.employee.user.get_full_name|default:leave.employee.user.username }} ({{ leave.employee.employee_id }})">
+                                        {{ leave.employee.user.get_full_name|default:leave.employee.user.username }} ({{ leave.employee.employee_id }})
+                                    </span>
                                 </div>
+                            </th>
+                             {% if leave.employee.department %}
+                            <td class="col-department fw-semibold text-truncate" title="{{ leave.employee.department }}">{{ leave.employee.department }}</td>
+                            {% else %}
+                            <td class="col-department text-muted">-</td>
+                            {% endif %}
+                            <td class="col-type text-truncate" title="{{ leave.leave_type }}">{{ leave.leave_type }}</td>
+                            <td class="col-date">{{ leave.from_date|date:"d M Y" }}</td>
+                            <td class="col-date">{{ leave.to_date|date:"d M Y" }}</td>
+                            <td class="col-days text-center fw-bold">{{ leave.total_days }}</td>
+                            <td class="leave-reason-cell" title="{{ leave.reason }}">{{ leave.reason|truncatechars:55 }}</td>
+                            <td class="col-applied">{{ leave.applied_at|date:"d M Y, h:i A" }}</td>
+                            <td class="col-status">
+                                <span class="status-pill {% if leave.status == 'PENDING' %}pending{% elif leave.status == 'APPROVED' %}approved{% elif leave.status == 'REJECTED' %}rejected{% else %}cancelled{% endif %}">
+                                    {{ leave.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="col-action text-end">
+                                {% if leave.status == 'PENDING' %}
+                                    <div class="d-flex gap-2 justify-content-end flex-nowrap action-btns">
+                                        <form method="post" action="{% url 'leave_approve' leave.pk %}">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-success btn-sm" aria-label="Approve leave request for {{ leave.employee.user.get_full_name|default:leave.employee.user.username }}">Approve</button>
+                                        </form>
+                                        <form method="post" action="{% url 'leave_reject' leave.pk %}">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-danger btn-sm" aria-label="Reject leave request for {{ leave.employee.user.get_full_name|default:leave.employee.user.username }}">Reject</button>
+                                        </form>
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted">Reviewed</span>
+                                {% endif %}
                             </td>
                         </tr>
-                        <tr>
-                            <td>Sarah Khan</td>
-                            <td>HR</td>
-                            <td>Sick Leave</td>
-                            <td>05 Jul 2026</td>
-                            <td>07 Jul 2026</td>
-                            <td>2</td>
-                            <td><span class="badge bg-success status-pill approved">Approved</span></td>
-                            <td>
-                                <div class="d-flex gap-2 action-btns">
-                                    <button class="btn btn-success btn-sm" disabled>Approve</button>
-                                    <button class="btn btn-danger btn-sm" disabled>Reject</button>
-                                </div>
+                        {% empty %}
+                        <tr class="leave-empty-row">
+                            <td colspan="10" class="text-center py-5">
+                                <i class="fas fa-inbox text-muted me-2" aria-hidden="true"></i>
+                                No leave requests found.
                             </td>
                         </tr>
-                        <tr>
-                            <td>Michael Smith</td>
-                            <td>Accounts</td>
-                            <td>Annual Leave</td>
-                            <td>20 Jul 2026</td>
-                            <td>24 Jul 2026</td>
-                            <td>5</td>
-                            <td><span class="badge bg-danger status-pill rejected">Rejected</span></td>
-                            <td>
-                                <div class="d-flex gap-2 action-btns">
-                                    <button class="btn btn-success btn-sm" disabled>Approve</button>
-                                    <button class="btn btn-danger btn-sm" disabled>Reject</button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Emma Johnson</td>
-                            <td>Marketing</td>
-                            <td>Casual Leave</td>
-                            <td>25 Jul 2026</td>
-                            <td>26 Jul 2026</td>
-                            <td>2</td>
-                            <td><span class="badge bg-warning status-pill pending">Pending</span></td>
-                            <td>
-                                <div class="d-flex gap-2 action-btns">
-                                    <button class="btn btn-success btn-sm">Approve</button>
-                                    <button class="btn btn-danger btn-sm">Reject</button>
-                                </div>
-                            </td>
-                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>

@@ -93,10 +93,13 @@ class LeaveRequest(models.Model):
         if self.from_date and self.to_date:
             if self.from_date > self.to_date:
                 raise ValidationError("From Date cannot be greater than To Date.")
-            
+
             # Calculate total days
             delta = self.to_date - self.from_date
             self.total_days = delta.days + 1
+
+            if not self.employee_id or not self.leave_type_id:
+                return
 
             # Check for overlapping leaves for this employee
             overlapping = LeaveRequest.objects.filter(

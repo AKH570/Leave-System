@@ -28,12 +28,62 @@
                     </div>
                     <div>
                         <h5>Request Details</h5>
-                        <p>Please provide accurate dates and a clear reason for faster processing.</p>
+                        <p>Please provide accurate dates and a clear reason during leave application</p>
                     </div>
                 </div>
 
-                <form method="POST" class="leave-form-body" id="leaveRequestForm" novalidate>
+                <form method="POST" action="{% url 'leave_apply' %}" class="leave-form-body" id="leaveRequestForm" novalidate>
                     {% csrf_token %}
+
+                    {% if messages %}
+                        <div class="leave-message-stack" aria-live="polite">
+                            {% for message in messages %}
+                                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags|default:'info' }}{% endif %} leave-form-message" role="alert">
+                                    <i class="fas {% if message.tags == 'success' %}fa-circle-check{% elif message.tags == 'warning' %}fa-triangle-exclamation{% else %}fa-circle-exclamation{% endif %}" aria-hidden="true"></i>
+                                    <span>{{ message }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    {% if form.errors %}
+                        <div class="alert alert-danger leave-validation-summary" role="alert" aria-live="assertive">
+                            <div class="leave-validation-heading">
+                                <i class="fas fa-circle-exclamation" aria-hidden="true"></i>
+                                <div>
+                                    <!-- <h6>Please correct the following errors</h6> -->
+                                    <p>Your leave request could not be submitted.</p>
+                                </div>
+                            </div>
+                            <ul class="leave-validation-list">
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        <li data-field="{{ field.name }}">
+                                            <strong>{{ field.label }}:</strong> {{ error }}
+                                        </li>
+                                    {% endfor %}
+                                {% endfor %}
+                                {% for error in form.non_field_errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    <div class="leave-field">
+                        <label for="employeeDisplay" class="form-label">
+                            <i class="fas fa-user-tie" aria-hidden="true"></i>
+                            Employee
+                        </label>
+                        <input
+                            type="text"
+                            id="employeeDisplay"
+                            class="form-control leave-readonly-field"
+                            value="{{ employee.user.get_full_name|default:employee.user.username }} ({{ employee.employee_id }})"
+                            readonly
+                            aria-readonly="true"
+                        >
+                    </div>
 
                     <div class="leave-field">
                         <label for="{{ form.leave_type.id_for_label }}" class="form-label">
@@ -41,9 +91,6 @@
                             Leave Type
                         </label>
                         {{ form.leave_type }}
-                        {% if form.leave_type.errors %}
-                            <div class="invalid-feedback">{{ form.leave_type.errors.0 }}</div>
-                        {% endif %}
                     </div>
 
                     <div class="leave-date-row">
@@ -54,9 +101,6 @@
                                     Start Date
                                 </label>
                                 {{ form.from_date }}
-                                {% if form.from_date.errors %}
-                                    <div class="invalid-feedback">{{ form.from_date.errors.0 }}</div>
-                                {% endif %}
                             </div>
                         </div>
 
@@ -67,9 +111,6 @@
                                     End Date
                                 </label>
                                 {{ form.to_date }}
-                                {% if form.to_date.errors %}
-                                    <div class="invalid-feedback">{{ form.to_date.errors.0 }}</div>
-                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -80,20 +121,7 @@
                             Reason for Leave
                         </label>
                         {{ form.reason }}
-                        {% if form.reason.errors %}
-                            <div class="invalid-feedback">{{ form.reason.errors.0 }}</div>
-                        {% endif %}
                     </div>
-
-                    {% if form.non_field_errors %}
-                        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
-                            <i class="fas fa-exclamation-circle me-2" aria-hidden="true"></i>
-                            {% for error in form.non_field_errors %}
-                                <div>{{ error }}</div>
-                            {% endfor %}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% endif %}
 
                     <div class="leave-actions">
                         <button type="submit" class="btn btn-leave-submit flex-fill" id="submitBtn">
@@ -165,8 +193,11 @@
                 field.setAttribute('type', 'date');
             }
 
-            const feedback = field.parentElement.querySelector('.invalid-feedback');
-            if (feedback) {
+        });
+
+        form.querySelectorAll('.leave-validation-list [data-field]').forEach(function (error) {
+            const field = form.elements[error.dataset.field];
+            if (field) {
                 field.classList.add('is-invalid');
                 field.setAttribute('aria-invalid', 'true');
             }

@@ -2,9 +2,9 @@
 
 {% block content %}
     <div class="main-content">
-        
+
         <!-- Topbar -->
-        <div class="topbar d-flex justify-content-between align-items-center">
+        <!-- <div class="topbar d-flex justify-content-between align-items-center">
             <div>
                 <h4>Hi {{ user.first_name }}</h4>
                 <p class="text-muted mb-0">Your Leave Management Dashboard</p>
@@ -15,7 +15,7 @@
                     <h6 class="mb-0">{{ "now"|date:"d M Y" }}</h6>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <!-- Summary Cards -->
         <div class="dashboard-row">
@@ -65,6 +65,16 @@
         </div>
 
         <!-- Leave Request Table -->
+        {% if messages %}
+        <div class="dashboard-message-stack" aria-live="polite">
+            {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags|default:'info' }}{% endif %} dashboard-message" role="alert">
+                <i class="fas {% if message.tags == 'success' %}fa-circle-check{% else %}fa-circle-exclamation{% endif %}" aria-hidden="true"></i>
+                <span>{{ message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
         <div class="table-section">
             <div class="table-actions">
                 <div>
@@ -73,44 +83,46 @@
                 </div>
             </div>
 
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover align-middle">
-                    <thead class="table-dark">
+            <div class="table-responsive dashboard-table-wrap" tabindex="0" aria-label="My leave history table">
+                <table class="table dashboard-table dashboard-table--history">
+                    <!-- <caption class="visually-hidden">Your leave request history with dates, duration, status, and available actions.</caption> -->
+                    <thead>
                         <tr>
-                            <th>Leave Type</th>
-                            <th>Date Range</th>
-                            <th>Days</th>
-                            <th>Status</th>
-                            <th>Action</th>
+                            <th scope="col" class="col-type">Leave Type</th>
+                            <th scope="col" class="col-date-range">Date Range</th>
+                            <th scope="col" class="col-days text-center">Days</th>
+                            <th scope="col" class="col-status">Status</th>
+                            <th scope="col" class="col-action text-end">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for leave in leave_history %}
                         <tr>
-                            <td>{{ leave.leave_type }}</td>
-                            <td>{{ leave.from_date|date:"d M" }} - {{ leave.to_date|date:"d M, Y" }}</td>
-                            <td class="fw-bold">{{ leave.total_days }}</td>
-                            <td>
-                                <span class="status-pill {% if leave.status == 'PENDING' %}pending{% elif leave.status == 'APPROVED' %}approved{% else %}rejected{% endif %}">
-                                    {{ leave.status }}
+                            <th scope="row" class="col-type text-truncate" title="{{ leave.leave_type }}">{{ leave.leave_type }}</th>
+                            <td class="col-date-range">{{ leave.from_date|date:"d M Y" }} - {{ leave.to_date|date:"d M Y" }}</td>
+                            <td class="col-days text-center fw-bold">{{ leave.total_days }}</td>
+                            <td class="col-status">
+                                <span class="status-pill {% if leave.status == 'PENDING' %}pending{% elif leave.status == 'APPROVED' %}approved{% elif leave.status == 'REJECTED' %}rejected{% else %}cancelled{% endif %}">
+                                    {{ leave.get_status_display }}
                                 </span>
                             </td>
-                            <td>
+                            <td class="col-action text-end">
                                 {% if leave.status == 'PENDING' %}
-                                <div class="action-btns">
-                                    <a href="{% url 'leave_cancel' leave.pk %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to cancel this request?')">
-                                        <i class="fas fa-times me-1"></i> Cancel
+                                <div class="d-flex gap-2 justify-content-end flex-nowrap action-btns">
+                                    <a href="{% url 'leave_cancel' leave.pk %}" class="btn btn-danger btn-sm" aria-label="Cancel {{ leave.leave_type }} request" onclick="return confirm('Are you sure you want to cancel this request?')">
+                                        Cancel
                                     </a>
                                 </div>
                                 {% else %}
-                                <span class="text-muted">-</span>
+                                <span class="text-muted">Reviewed</span>
                                 {% endif %}
                             </td>
                         </tr>
                         {% empty %}
-                        <tr>
-                            <td colspan="5" class="text-center py-4">
-                                <i class="fas fa-inbox text-muted me-2"></i>No leave history found.
+                        <tr class="leave-empty-row">
+                            <td colspan="5" class="text-center py-5">
+                                <i class="fas fa-inbox text-muted me-2" aria-hidden="true"></i>
+                                No leave history found.
                             </td>
                         </tr>
                         {% endfor %}

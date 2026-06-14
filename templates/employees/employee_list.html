@@ -1,0 +1,175 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/employee_list.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="employee-list-page">
+    <section class="employee-list-hero">
+        <div>
+            <span class="employee-list-eyebrow">Team directory</span>
+            <h1>Employees</h1>
+            <p>View employee profiles, roles, departments, and current account status.</p>
+        </div>
+        <div class="employee-list-hero-icon" aria-hidden="true">
+            <i class="fas fa-users"></i>
+        </div>
+    </section>
+
+    <section class="employee-stat-grid" aria-label="Employee summary">
+        <article class="employee-stat-card employee-stat-card--total">
+            <span class="employee-stat-icon"><i class="fas fa-id-badge"></i></span>
+            <div>
+                <strong>{{ total_employees }}</strong>
+                <span>Total employees</span>
+            </div>
+        </article>
+        <article class="employee-stat-card employee-stat-card--active">
+            <span class="employee-stat-icon"><i class="fas fa-user-check"></i></span>
+            <div>
+                <strong>{{ active_employees }}</strong>
+                <span>Active employees</span>
+            </div>
+        </article>
+        <article class="employee-stat-card employee-stat-card--inactive">
+            <span class="employee-stat-icon"><i class="fas fa-user-clock"></i></span>
+            <div>
+                <strong>{{ inactive_employees }}</strong>
+                <span>Inactive employees</span>
+            </div>
+        </article>
+        <article class="employee-stat-card employee-stat-card--departments">
+            <span class="employee-stat-icon"><i class="fas fa-building"></i></span>
+            <div>
+                <strong>{{ department_count }}</strong>
+                <span>Departments</span>
+            </div>
+        </article>
+    </section>
+
+    <section class="employee-directory">
+        <div class="employee-directory-header">
+            <div>
+                <h2>Employee directory</h2>
+                <p>
+                    Showing {{ employees|length }} employee{{ employees|length|pluralize }}
+                    {% if search_query or selected_status %}matching your filters{% endif %}.
+                </p>
+            </div>
+
+            <form method="get" class="employee-filter-form" role="search">
+                <label class="employee-search">
+                    <span class="visually-hidden">Search employees</span>
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                    <input
+                        type="search"
+                        name="q"
+                        value="{{ search_query }}"
+                        placeholder="Search name, ID, role..."
+                    >
+                </label>
+                <label>
+                    <span class="visually-hidden">Filter by employee status</span>
+                    <select name="status" class="employee-status-filter">
+                        <option value="">All statuses</option>
+                        <option value="active" {% if selected_status == 'active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if selected_status == 'inactive' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </label>
+                <button type="submit" class="btn btn-primary employee-filter-button">Filter</button>
+                {% if search_query or selected_status %}
+                    <a href="{% url 'employee_list' %}" class="btn btn-light employee-clear-button">Clear</a>
+                {% endif %}
+            </form>
+        </div>
+
+        <div class="employee-table-wrap" tabindex="0" aria-label="Employee directory table">
+            <table class="employee-table">
+                <!-- <caption class="visually-hidden">All employees with contact, department, designation, supervisor, leave balance, and status.</caption> -->
+                <thead>
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Department</th>
+                        <th scope="col">Designation</th>
+                        <th scope="col">Supervisor</th>
+                        <th scope="col">Leave Balance</th>
+                        <th scope="col">Status</th>
+                        <th scope="col" class="employee-view-column">View Profile</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for employee in employees %}
+                    <tr>
+                        <th scope="row">
+                            <div class="employee-identity">
+                                <span class="employee-avatar" aria-hidden="true">
+                                    {{ employee.user.first_name|first|default:employee.user.username|first|upper }}
+                                </span>
+                                <span class="employee-identity-copy">
+                                    <span class="employee-name-line">
+                                        <strong>{{ employee.user.get_full_name|default:employee.user.username }}</strong>
+                                        <span> ({{ employee.employee_id }})</span>
+                                    </span>
+                                    <small>{{ employee.user.email|default:"No email provided" }}</small>
+                                </span>
+                            </div>
+                        </th>
+                        <td>
+                            {% if employee.department %}
+                                {{ employee.department }}
+                            {% else %}
+                                <span class="employee-muted">Not assigned</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ employee.designation|default:"Employee" }}</td>
+                        <td>
+                            {% if employee.supervisor %}
+                                {{ employee.supervisor.user.get_full_name|default:employee.supervisor.user.username }}
+                            {% else %}
+                                <span class="employee-muted">Not assigned</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="employee-balance">
+                                <strong>{{ employee.leave_balance }} day{{ employee.leave_balance|pluralize }}</strong>
+                                <small>{{ employee.used_leave_days }} used of {{ employee.yearly_leave_allowance }}</small>
+                            </span>
+                        </td>
+                        <td>
+                            <span class="employee-status {% if employee.is_active %}employee-status--active{% else %}employee-status--inactive{% endif %}">
+                                <span aria-hidden="true"></span>
+                                {% if employee.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </td>
+                        <td class="employee-view-column">
+                            <a
+                                href="{% url 'employee_detail' employee.pk %}"
+                                class="btn employee-view-button"
+                                aria-label="View profile for {{ employee.user.get_full_name|default:employee.user.username }}"
+                                title="View profile">
+                                <i class="fa-solid fa-user" aria-hidden="true"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7">
+                            <div class="employee-empty-state">
+                                <i class="fas fa-user-slash" aria-hidden="true"></i>
+                                <h3>No employees found</h3>
+                                <p>Try changing the search term or status filter.</p>
+                                {% if search_query or selected_status %}
+                                    <a href="{% url 'employee_list' %}" class="btn btn-primary btn-sm">View all employees</a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

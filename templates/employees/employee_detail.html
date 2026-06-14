@@ -1,0 +1,113 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/employee_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="employee-detail-page">
+    <div class="employee-detail-toolbar">
+        <a href="{% url 'employee_list' %}" class="employee-back-link">
+            <i class="fas fa-arrow-left" aria-hidden="true"></i>
+            Back to employees
+        </a>
+        <span class="employee-detail-status {% if employee.is_active %}employee-detail-status--active{% else %}employee-detail-status--inactive{% endif %}">
+            <span aria-hidden="true"></span>
+            {% if employee.is_active %}Active employee{% else %}Inactive employee{% endif %}
+        </span>
+    </div>
+
+    <section class="employee-detail-hero">
+        <img
+            src="{% static 'images/avatar.png' %}"
+            alt="{{ employee.user.get_full_name|default:employee.user.username }} profile picture"
+            class="employee-detail-avatar"
+        >
+        <div class="employee-detail-intro">
+            <span class="employee-detail-id">{{ employee.employee_id }}</span>
+            <h1>{{ employee.user.get_full_name|default:employee.user.username }}</h1>
+            <p>{{ employee.designation|default:"Employee" }}</p>
+        </div>
+        <div class="employee-detail-balance">
+            <span>{{ current_year }} leave balance</span>
+            <strong>{{ leave_balance }} day{{ leave_balance|pluralize }}</strong>
+            <small>{{ used_leave_days }} used of {{ yearly_leave_allowance }}</small>
+        </div>
+    </section>
+
+    <section class="employee-detail-grid">
+        <article class="employee-detail-card">
+            <div class="employee-detail-card-heading">
+                <i class="fas fa-address-card" aria-hidden="true"></i>
+                <div>
+                    <h2>Employee information</h2>
+                    <p>Employment and reporting details</p>
+                </div>
+            </div>
+            <dl class="employee-detail-list">
+                <div><dt>Employee ID</dt><dd>{{ employee.employee_id }}</dd></div>
+                <div><dt>Designation</dt><dd>{{ employee.designation|default:"Employee" }}</dd></div>
+                <div><dt>Department</dt><dd>{{ employee.department|default:"Not assigned" }}</dd></div>
+                <div><dt>Supervisor</dt><dd>{% if employee.supervisor %}{{ employee.supervisor.user.get_full_name|default:employee.supervisor.user.username }}{% else %}Not assigned{% endif %}</dd></div>
+                <div><dt>Joining date</dt><dd>{{ employee.joining_date|date:"d F Y" }}</dd></div>
+                <div><dt>Status</dt><dd>{% if employee.is_active %}Active{% else %}Inactive{% endif %}</dd></div>
+            </dl>
+        </article>
+
+        <article class="employee-detail-card">
+            <div class="employee-detail-card-heading">
+                <i class="fas fa-user" aria-hidden="true"></i>
+                <div>
+                    <h2>Account and contact</h2>
+                    <p>Personal and login information</p>
+                </div>
+            </div>
+            <dl class="employee-detail-list">
+                <div><dt>Full name</dt><dd>{{ employee.user.get_full_name|default:"Not provided" }}</dd></div>
+                <div><dt>Username</dt><dd>{{ employee.user.username }}</dd></div>
+                <div><dt>Email</dt><dd>{{ employee.user.email|default:"Not provided" }}</dd></div>
+                <div><dt>Phone</dt><dd>{{ employee.user.phone|default:"Not provided" }}</dd></div>
+                <div><dt>Role</dt><dd>{{ employee.user.get_role_display|default:"Employee" }}</dd></div>
+                <div><dt>Account created</dt><dd>{{ employee.user.date_joined|date:"d F Y" }}</dd></div>
+            </dl>
+        </article>
+    </section>
+
+    <section class="employee-detail-card employee-leave-card">
+        <div class="employee-detail-card-heading">
+            <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+            <div>
+                <h2>Recent leave requests</h2>
+                <p>The employee's five most recent requests</p>
+            </div>
+        </div>
+        <div class="employee-leave-table-wrap">
+            <table class="employee-leave-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Leave type</th>
+                        <th scope="col">From</th>
+                        <th scope="col">To</th>
+                        <th scope="col">Days</th>
+                        <th scope="col">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for leave in recent_leaves %}
+                    <tr>
+                        <td>{{ leave.leave_type }}</td>
+                        <td>{{ leave.from_date|date:"d M Y" }}</td>
+                        <td>{{ leave.to_date|date:"d M Y" }}</td>
+                        <td>{{ leave.total_days }}</td>
+                        <td><span class="employee-leave-status employee-leave-status--{{ leave.status|lower }}">{{ leave.get_status_display }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="employee-leave-empty">No leave requests found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

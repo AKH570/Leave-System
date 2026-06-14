@@ -1,0 +1,316 @@
+/* Employee profile page */
+.employee-detail-page {
+    padding: 12px 0 30px;
+    color: #172033;
+}
+
+.employee-detail-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.employee-back-link,
+.employee-detail-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: .78rem;
+    font-weight: 800;
+}
+
+.employee-back-link {
+    color: #4f46e5;
+    text-decoration: none;
+}
+
+.employee-back-link:hover {
+    color: #3730a3;
+}
+
+.employee-detail-status {
+    padding: 7px 11px;
+    border-radius: 999px;
+    text-transform: uppercase;
+}
+
+.employee-detail-status span {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.employee-detail-status--active {
+    color: #047857;
+    background: #ecfdf5;
+}
+
+.employee-detail-status--inactive {
+    color: #c2410c;
+    background: #fff7ed;
+}
+
+/* Profile hero */
+.employee-detail-hero {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
+    padding: 28px 30px;
+    border-radius: 20px;
+    color: #fff;
+    background: linear-gradient(135deg, #172554 0%, #4338ca 58%, #7c3aed 100%);
+    box-shadow: 0 20px 40px rgba(67, 56, 202, .2);
+}
+
+.employee-detail-avatar {
+    width: 88px;
+    height: 88px;
+    flex: 0 0 88px;
+    border: 4px solid rgba(255, 255, 255, .65);
+    border-radius: 24px;
+    object-fit: cover;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, .2);
+}
+
+.employee-detail-intro {
+    min-width: 0;
+}
+
+.employee-detail-id {
+    display: inline-flex;
+    margin-bottom: 7px;
+    padding: 4px 8px;
+    border: 1px solid rgba(255, 255, 255, .25);
+    border-radius: 7px;
+    color: #e0e7ff;
+    background: rgba(255, 255, 255, .12);
+    font-size: .68rem;
+    font-weight: 800;
+}
+
+.employee-detail-intro h1 {
+    margin: 0 0 5px;
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 800;
+}
+
+.employee-detail-intro p {
+    margin: 0;
+    color: rgba(255, 255, 255, .76);
+}
+
+.employee-detail-balance {
+    display: flex;
+    min-width: 175px;
+    margin-left: auto;
+    padding: 15px 18px;
+    border: 1px solid rgba(255, 255, 255, .2);
+    border-radius: 15px;
+    flex-direction: column;
+    background: rgba(255, 255, 255, .12);
+}
+
+.employee-detail-balance span,
+.employee-detail-balance small {
+    color: rgba(255, 255, 255, .74);
+    font-size: .69rem;
+    font-weight: 700;
+}
+
+.employee-detail-balance strong {
+    margin: 3px 0;
+    font-size: 1.3rem;
+}
+
+/* Information cards */
+.employee-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 18px;
+}
+
+.employee-detail-card {
+    overflow: hidden;
+    border: 1px solid #e5eaf1;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 14px 32px rgba(15, 23, 42, .06);
+}
+
+.employee-detail-card-heading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 22px;
+    border-bottom: 1px solid #edf1f6;
+}
+
+.employee-detail-card-heading > i {
+    display: grid;
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    place-items: center;
+    border-radius: 12px;
+    color: #4f46e5;
+    background: #eef2ff;
+}
+
+.employee-detail-card-heading h2 {
+    margin: 0 0 3px;
+    font-size: 1rem;
+    font-weight: 800;
+}
+
+.employee-detail-card-heading p {
+    margin: 0;
+    color: #8490a5;
+    font-size: .74rem;
+}
+
+.employee-detail-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 0;
+}
+
+.employee-detail-list div {
+    min-width: 0;
+    padding: 17px 22px;
+    border-bottom: 1px solid #eef2f7;
+}
+
+.employee-detail-list div:nth-last-child(-n+2) {
+    border-bottom: 0;
+}
+
+.employee-detail-list dt {
+    margin-bottom: 5px;
+    color: #94a3b8;
+    font-size: .65rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.employee-detail-list dd {
+    margin: 0;
+    overflow: hidden;
+    color: #334155;
+    font-size: .82rem;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Leave table */
+.employee-leave-table-wrap {
+    overflow-x: auto;
+}
+
+.employee-leave-table {
+    min-width: 680px;
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .8rem;
+}
+
+.employee-leave-table th,
+.employee-leave-table td {
+    padding: 13px 22px;
+    border-bottom: 1px solid #eef2f7;
+    text-align: left;
+}
+
+.employee-leave-table th {
+    color: #7c8aa0;
+    background: #f8fafc;
+    font-size: .66rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.employee-leave-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.employee-leave-status {
+    display: inline-flex;
+    padding: 5px 8px;
+    border-radius: 999px;
+    font-size: .65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.employee-leave-status--approved {
+    color: #047857;
+    background: #ecfdf5;
+}
+
+.employee-leave-status--pending {
+    color: #c2410c;
+    background: #fff7ed;
+}
+
+.employee-leave-status--rejected {
+    color: #b91c1c;
+    background: #fef2f2;
+}
+
+.employee-leave-status--cancelled {
+    color: #475569;
+    background: #f1f5f9;
+}
+
+.employee-leave-empty {
+    padding: 35px !important;
+    color: #94a3b8;
+    text-align: center !important;
+}
+
+/* Responsive layout */
+@media (max-width: 950px) {
+    .employee-detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 650px) {
+    .employee-detail-hero {
+        align-items: flex-start;
+        padding: 22px 18px;
+        flex-wrap: wrap;
+    }
+
+    .employee-detail-avatar {
+        width: 68px;
+        height: 68px;
+        flex-basis: 68px;
+        border-radius: 18px;
+    }
+
+    .employee-detail-balance {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .employee-detail-list {
+        grid-template-columns: 1fr;
+    }
+
+    .employee-detail-list div:nth-last-child(2) {
+        border-bottom: 1px solid #eef2f7;
+    }
+
+    .employee-detail-toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}

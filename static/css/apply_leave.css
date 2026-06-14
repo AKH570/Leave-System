@@ -102,6 +102,98 @@
     padding: 34px 32px 32px;
 }
 
+.leave-message-stack {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 26px;
+}
+
+.leave-form-message {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 16px 18px;
+    margin: 0;
+    border-radius: 12px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.leave-form-message i {
+    flex: 0 0 auto;
+    font-size: 1.1rem;
+}
+
+.leave-form-message.alert-success {
+    border: 1px solid #a7e2bd;
+    border-left: 4px solid #198754;
+    color: #146c43;
+    background: #edf9f1;
+}
+
+.leave-form-message.alert-danger {
+    border: 1px solid var(--leave-danger-border);
+    border-left: 4px solid var(--leave-danger);
+    color: var(--leave-danger-dark);
+    background: var(--leave-danger-soft);
+}
+
+.leave-form-message.alert-warning {
+    border: 1px solid #f4d28b;
+    border-left: 4px solid #d97706;
+    color: #92400e;
+    background: #fff8e8;
+}
+
+.leave-validation-summary {
+    padding: 18px 20px;
+    margin: 0 0 26px;
+    border: 1px solid var(--leave-danger-border);
+    border-left: 4px solid var(--leave-danger);
+    border-radius: 12px;
+    color: var(--leave-danger-dark);
+    background: var(--leave-danger-soft);
+    box-shadow: 0 10px 24px rgba(180, 35, 47, 0.08);
+}
+
+.leave-validation-heading {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.leave-validation-heading > i {
+    margin-top: 2px;
+    color: var(--leave-danger);
+    font-size: 1.15rem;
+}
+
+.leave-validation-heading h6 {
+    margin: 0;
+    color: var(--leave-danger-dark);
+    font-size: 0.98rem;
+    font-weight: 800;
+}
+
+.leave-validation-heading p {
+    margin: 3px 0 0;
+    color: var(--leave-danger);
+    font-size: 0.86rem;
+}
+
+.leave-validation-list {
+    padding-left: 1.25rem;
+    margin: 14px 0 0 30px;
+    color: var(--leave-danger-dark);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.leave-validation-list li + li {
+    margin-top: 5px;
+}
+
 .leave-field {
     margin-bottom: 24px;
 }
@@ -169,6 +261,16 @@
 .leave-form-body input::placeholder,
 .leave-form-body textarea::placeholder {
     color: #98a2b3;
+}
+
+.leave-form-body .leave-readonly-field,
+.leave-form-body .leave-readonly-field:focus {
+    border-color: #cfd8e6;
+    background-color: #f8fafc;
+    color: #344054;
+    font-weight: 700;
+    cursor: not-allowed;
+    box-shadow: none;
 }
 
 .leave-form-body .is-invalid,
@@ -408,6 +510,23 @@
 
     .leave-form-body {
         padding: 26px 20px 24px;
+    }
+
+    .leave-validation-summary {
+        padding: 16px;
+        margin-bottom: 22px;
+    }
+
+    .leave-message-stack {
+        margin-bottom: 22px;
+    }
+
+    .leave-form-message {
+        padding: 14px 16px;
+    }
+
+    .leave-validation-list {
+        margin-left: 12px;
     }
 
     .leave-date-row {

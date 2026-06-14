@@ -15,6 +15,7 @@
     <!-- Dashboard CSS -->
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <link rel="stylesheet" href="{% static 'css/apply_leave.css' %}">
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
 
@@ -75,21 +76,74 @@
 
     </div>
 
-    <main class="content-wrapper" style="margin-left: 250px; padding: 20px;">
+    <main class="content-wrapper dashboard-content-wrapper">
         <!-- Top Navbar -->
-        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom mb-4 shadow-sm">
+        <nav class="navbar navbar-expand-lg navbar-light dashboard-navbar mb-2">
             <div class="container-fluid">
-                <span class="navbar-brand mb-0 h1">Admin Dashboard</span>
-                <div class="ms-auto d-flex align-items-center">
-                    <div class="dropdown">
-                        <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle text-dark" id="userDropdown" data-bs-toggle="dropdown">
-                            <i class="fas fa-user-circle fa-lg me-2"></i>
-                            <span>{{ user.get_full_name|default:user.username }}</span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end shadow">
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i> Profile</a></li>
+                <div class="dashboard-profile-slot">
+                    <div class="dashboard-navbar-date" aria-label="Current date">
+                        <i class="fas fa-calendar-day" aria-hidden="true"></i>
+                        <span class="dashboard-navbar-date-full">{% now "l, d F Y" %}</span>
+                        <span class="dashboard-navbar-date-short">{% now "d M Y" %}</span>
+                    </div>
+                    <button class="dashboard-notification-button" type="button" aria-label="Notifications">
+                        <svg class="dashboard-notification-icon" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                        <span class="dashboard-notification-dot" aria-hidden="true"></span>
+                    </button>
+                    <div class="dropdown dashboard-profile-dropdown">
+                        <button class="dashboard-profile-trigger" type="button" id="userDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                            <span class="dashboard-profile-copy">
+                                <strong>{{ user.get_full_name|default:user.username }}</strong>
+                                <small>
+                                    {% if user.employee_profile.designation %}
+                                        {{ user.employee_profile.designation }}
+                                    {% elif user.is_superuser or user.is_staff or user.role == 'ADMIN' %}
+                                        Admin
+                                    {% else %}
+                                        {{ user.get_role_display|default:"Employee" }}
+                                    {% endif %}
+                                </small>
+                            </span>
+                            <span class="dashboard-avatar-wrap">
+                                <img src="{% static 'images/avatar.png' %}" alt="{{ user.get_full_name|default:user.username }} profile picture" class="dashboard-avatar">
+                                <span class="dashboard-avatar-status" aria-label="Online"></span>
+                            </span>
+                            <i class="fas fa-chevron-down dashboard-profile-chevron" aria-hidden="true"></i>
+                        </button>
+
+                        <ul class="dropdown-menu dropdown-menu-end dashboard-profile-menu" aria-labelledby="userDropdown">
+                            <li class="dashboard-profile-menu-header">
+                                <img src="{% static 'images/avatar.png' %}" alt="" class="dashboard-avatar dashboard-avatar--menu">
+                                <span>
+                                    <strong>{{ user.get_full_name|default:user.username }}</strong>
+                                    <small>{{ user.email|default:user.username }}</small>
+                                </span>
+                            </li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{% url 'accounts:logout' %}"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'employee_profile' %}">
+                                    <i class="fas fa-user"></i>
+                                    View Profile
+                                </a>
+                            </li>
+                            {% if user.is_staff or user.is_superuser %}
+                            <li>
+                                <a class="dropdown-item" href="{% url 'admin:index' %}">
+                                    <i class="fas fa-gear"></i>
+                                    Settings
+                                </a>
+                            </li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item dashboard-logout-link" href="{% url 'accounts:logout' %}">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    Logout
+                                </a>
+                            </li>
                         </ul>
                     </div>
                 </div>
@@ -97,7 +151,7 @@
         </nav>
 
         <div class="container-fluid">
-            {% if messages %}
+            {% if messages and not messages_in_content %}
                 {% for message in messages %}
                     <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
                         {{ message }}
@@ -115,6 +169,37 @@
 
     <!-- Dashboard JS -->
     <script src="{% static 'js/dashboard.js' %}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const trigger = document.getElementById('userDropdown');
+            const menu = trigger ? trigger.nextElementSibling : null;
+
+            if (!trigger || !menu) return;
+
+            trigger.addEventListener('click', function (event) {
+                event.stopPropagation();
+                const isOpen = menu.classList.toggle('show');
+                trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            });
+
+            menu.addEventListener('click', function (event) {
+                event.stopPropagation();
+            });
+
+            document.addEventListener('click', function () {
+                menu.classList.remove('show');
+                trigger.setAttribute('aria-expanded', 'false');
+            });
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') {
+                    menu.classList.remove('show');
+                    trigger.setAttribute('aria-expanded', 'false');
+                    trigger.focus();
+                }
+            });
+        });
+    </script>
 
 </body>
 </html>
