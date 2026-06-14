@@ -151,6 +151,7 @@
 }
 
 .employee-detail-card-heading > i {
+    position: relative;
     display: grid;
     width: 40px;
     height: 40px;
@@ -159,6 +160,77 @@
     border-radius: 12px;
     color: #4f46e5;
     background: #eef2ff;
+}
+
+.employee-detail-card-heading .fa-address-card::before {
+    display: block;
+    width: 22px;
+    height: 16px;
+    border: 2px solid currentColor;
+    border-radius: 3px;
+    content: "";
+}
+
+.employee-detail-card-heading .fa-address-card::after {
+    position: absolute;
+    top: 13px;
+    left: 11px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow:
+        0 8px 0 2px currentColor,
+        11px 1px 0 -2px currentColor,
+        11px 5px 0 -2px currentColor;
+    content: "";
+}
+
+.employee-detail-card-heading .fa-user::before {
+    display: block;
+    width: 9px;
+    height: 9px;
+    margin-bottom: 2px;
+    border-radius: 50%;
+    background: currentColor;
+    content: "";
+}
+
+.employee-detail-card-heading .fa-user::after {
+    display: block;
+    width: 19px;
+    height: 9px;
+    border-radius: 10px 10px 4px 4px;
+    background: currentColor;
+    content: "";
+}
+
+.employee-detail-card-heading .fa-calendar-alt::before {
+    display: block;
+    width: 20px;
+    height: 18px;
+    border: 2px solid currentColor;
+    border-radius: 3px;
+    background: repeating-linear-gradient(
+        to right,
+        transparent 0 4px,
+        currentColor 4px 6px
+    );
+    background-position: 2px 8px;
+    background-size: 16px 5px;
+    background-repeat: no-repeat;
+    content: "";
+}
+
+.employee-detail-card-heading .fa-calendar-alt::after {
+    position: absolute;
+    top: 11px;
+    left: 10px;
+    width: 20px;
+    height: 4px;
+    border-bottom: 2px solid currentColor;
+    background: currentColor;
+    content: "";
 }
 
 .employee-detail-card-heading h2 {
