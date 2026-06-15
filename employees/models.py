@@ -1,12 +1,100 @@
-from django.db import models
+import re
+import uuid
+
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator, RegexValidator
-from django.utils import timezone
-from django.conf import settings
+from django.db import IntegrityError, models, transaction
 from django.db.models import Sum
+from django.db.models.functions import Lower
+from django.utils import timezone
+
+
+def generate_designation_id():
+    """Return a compact, collision-resistant designation code."""
+    return f'DSG{uuid.uuid4().hex[:9].upper()}'
+
+
+class EmpDesignation(models.Model):
+    class Status(models.TextChoices):
+        ACTIVE = 'ACTIVE', 'Active'
+        INACTIVE = 'INACTIVE', 'Inactive'
+
+    designation_id = models.CharField(
+        max_length=12,
+        unique=True,
+        editable=False,
+        default=generate_designation_id,
+    )
+    designation_name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True)
+    department = models.ForeignKey(
+        'departments.Department',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='designations',
+    )
+    status = models.CharField(
+        max_length=8,
+        choices=Status.choices,
+        default=Status.ACTIVE,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='created_employee_designations',
+    )
+
+    class Meta:
+        verbose_name = 'Employee Designation'
+        verbose_name_plural = 'Employee Designations'
+        ordering = ['designation_name']
+        constraints = [
+            models.UniqueConstraint(
+                Lower('designation_name'),
+                name='unique_emp_designation_name_ci',
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+        self.designation_name = (self.designation_name or '').strip()
+        if not self.designation_name:
+            return
+
+        duplicate_names = EmpDesignation.objects.filter(
+            designation_name__iexact=self.designation_name,
+        )
+        if self.pk:
+            duplicate_names = duplicate_names.exclude(pk=self.pk)
+        if duplicate_names.exists():
+            raise ValidationError({
+                'designation_name': 'A designation with this name already exists.',
+            })
+
+    def save(self, *args, **kwargs):
+        self.designation_name = (self.designation_name or '').strip()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.designation_name
+
 
 class Employee(models.Model):
-    employee_id = models.CharField(max_length=20, unique=True)
+    EMPLOYEE_ID_PATTERN = re.compile(r'^EMP(\d+)$')
+    MAX_EMPLOYEE_NUMBER = 9999
+
+    employee_id = models.CharField(
+        max_length=7,
+        unique=True,
+        editable=False,
+        db_index=True,
+    )
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -18,12 +106,12 @@ class Employee(models.Model):
         null=True,
         related_name='employees'
     )
-    designation = models.CharField(
-        max_length=100,
+    designation = models.ForeignKey(
+        'employees.EmpDesignation',
+        on_delete=models.PROTECT,
+        related_name='%(class)s_records',
         blank=True,
         null=True,
-        default='Employee',
-        help_text="Job position/designation"
     )
     joining_date = models.DateField(default=timezone.now)
     supervisor = models.ForeignKey(
@@ -34,6 +122,44 @@ class Employee(models.Model):
         related_name='subordinates'
     )
     is_active = models.BooleanField(default=True)
+
+    @classmethod
+    def _next_employee_id(cls):
+        latest_ids = cls.objects.order_by('-pk').values_list(
+            'employee_id',
+            flat=True,
+        )
+        latest_number = 0
+        for employee_id in latest_ids:
+            match = cls.EMPLOYEE_ID_PATTERN.fullmatch(employee_id or '')
+            if match:
+                latest_number = int(match.group(1))
+                break
+
+        next_number = latest_number + 1
+        if next_number > cls.MAX_EMPLOYEE_NUMBER:
+            raise ValidationError({
+                'employee_id': 'The employee ID sequence has reached EMP9999.',
+            })
+        return f'EMP{next_number:04d}'
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            self.employee_id = Employee.objects.only('employee_id').get(
+                pk=self.pk,
+            ).employee_id
+            return super().save(*args, **kwargs)
+
+        for attempt in range(3):
+            try:
+                with transaction.atomic():
+                    Employee.objects.select_for_update().order_by('-pk').first()
+                    self.employee_id = self._next_employee_id()
+                    return super().save(*args, **kwargs)
+            except IntegrityError:
+                self.employee_id = ''
+                if attempt == 2:
+                    raise
 
     def __str__(self):
         return f"{self.user.get_full_name()} ({self.employee_id})"

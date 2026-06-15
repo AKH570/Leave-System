@@ -35,7 +35,13 @@ class Registration(models.Model):
     )
     phone = models.CharField(max_length=15, validators=[phone_regex])
     
-    designation = models.CharField(max_length=100, null=True, blank=True)
+    designation = models.ForeignKey(
+        'employees.EmpDesignation',
+        on_delete=models.PROTECT,
+        related_name='%(class)s_records',
+        null=True,
+        blank=True,
+    )
     department = models.ForeignKey(
         'departments.Department', 
         on_delete=models.SET_NULL, 

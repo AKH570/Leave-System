@@ -35,11 +35,25 @@ class CustomUserAdmin(UserAdmin):
 
 @admin.register(Registration)
 class RegistrationAdmin(admin.ModelAdmin):
-    list_display = ('username', 'email', 'status', 'created_at', 'get_actions_display')
-    list_filter = ('status', 'created_at', 'terms_accepted')
-    search_fields = ('username', 'email', 'first_name', 'last_name')
+    list_display = (
+        'username',
+        'email',
+        'designation',
+        'status',
+        'created_at',
+        'get_actions_display',
+    )
+    list_filter = ('status', 'designation', 'created_at', 'terms_accepted')
+    search_fields = (
+        'username',
+        'email',
+        'first_name',
+        'last_name',
+        'designation__designation_name',
+    )
     ordering = ('-created_at',)
     readonly_fields = ('created_at', 'updated_at', 'approved_at')
+    list_select_related = ('designation', 'department')
     actions = ['approve_registrations', 'reject_registrations']
     
     fieldsets = (

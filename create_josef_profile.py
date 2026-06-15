@@ -8,7 +8,7 @@ import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'LeaveManagementSystem.settings')
 django.setup()
 
-from employees.models import Employee
+from employees.models import EmpDesignation, Employee
 from accounts.models import User
 from departments.models import Department
 
@@ -37,11 +37,13 @@ if emp:
     print(f"Employee profile already exists for Josef: ID={emp.employee_id}")
 else:
     # Create employee profile
+    designation, _ = EmpDesignation.objects.get_or_create(
+        designation_name="Staff Member",
+    )
     emp = Employee.objects.create(
         user=josef,
-        employee_id=f"EMP{josef.id:05d}",
         department=dept,
-        designation="Staff Member",
+        designation=designation,
         is_active=True
     )
     print(f"\nCreated employee profile for Josef:")

@@ -3,6 +3,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
 import re
 from .models import Registration
+from employees.models import EmpDesignation
 
 class RegistrationForm(forms.ModelForm):
     """Form for new user registration"""
@@ -33,6 +34,13 @@ class RegistrationForm(forms.ModelForm):
             'class': 'form-check-input',
         })
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['designation'].queryset = EmpDesignation.objects.filter(
+            status=EmpDesignation.Status.ACTIVE,
+        ).select_related('department')
+        self.fields['designation'].empty_label = 'Select designation'
 
     class Meta:
         model = Registration
@@ -76,10 +84,8 @@ class RegistrationForm(forms.ModelForm):
                 'maxlength': '150',
                 'pattern': '[a-zA-Z0-9_]+',
             }),
-            'designation': forms.TextInput(attrs={
+            'designation': forms.Select(attrs={
                 'class': 'form-control',
-                'placeholder': 'Enter your designation (optional)',
-                'required': False,
             }),
             'email': forms.EmailInput(attrs={
                 'class': 'form-control',

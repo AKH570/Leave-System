@@ -7,7 +7,7 @@
     <title>Register | Leave Management System</title>
     <link rel="stylesheet" href="{% static 'css/bootstrap-5.3.2.min.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'css/registration.css' %}"
+    <link rel="stylesheet" href="{% static 'css/registration.css' %}">
 </head>
 <body>
     <div class="login-page">
@@ -48,7 +48,11 @@
                     <!-- Personal Information Section -->
                     <div class="form-section">
                         <div class="section-title">
-                            <i class="fas fa-user-circle"></i> Personal Information
+                            <i class="fas fa-user-circle"></i>
+                            <span class="section-title-copy">
+                                <strong>Personal Information</strong>
+                                <small>Tell us how to identify and contact you.</small>
+                            </span>
                         </div>
 
                         <div class="form-row">
@@ -99,16 +103,6 @@
                                     <div class="form-label-hint">10-15 digits with optional + or -</div>
                                 {% endif %}
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Professional Information Section -->
-                    <div class="form-section">
-                        <div class="section-title">
-                            <i class="fas fa-briefcase"></i> Professional Information
-                        </div>
-
-                        <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label" for="{{ form.department.id_for_label }}">
                                     <i class="fas fa-sitemap"></i>
@@ -123,13 +117,41 @@
                         </div>
                     </div>
 
-                    <!-- Account Information Section -->
+                    <!-- Professional Information Section -->
                     <div class="form-section">
                         <div class="section-title">
-                            <i class="fas fa-lock"></i> Account Information
+                            <i class="fas fa-briefcase"></i>
+                            <span class="section-title-copy">
+                                <strong>Professional Information</strong>
+                                <small>Select your current designation.</small>
+                            </span>
                         </div>
 
                         <div class="form-row full">
+                            <div class="form-group">
+                                <label class="form-label" for="{{ form.designation.id_for_label }}">
+                                    <i class="fas fa-id-badge"></i>
+                                    {{ form.designation.label }}
+                                </label>
+                                {{ form.designation }}
+                                {% if form.designation.errors %}
+                                    <small class="text-danger">{{ form.designation.errors.0 }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Account Information Section -->
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="fas fa-lock"></i>
+                            <span class="section-title-copy">
+                                <strong>Account Information</strong>
+                                <small>Create secure credentials for your account.</small>
+                            </span>
+                        </div>
+
+                        <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label" for="{{ form.username.id_for_label }}">
                                     <i class="fas fa-at"></i>
@@ -145,9 +167,6 @@
                                     <small class="text-danger">{{ form.username.errors.0 }}</small>
                                 {% endif %}
                             </div>
-                        </div>
-
-                        <div class="form-row full">
                             <div class="form-group">
                                 <label class="form-label" for="{{ form.email.id_for_label }}">
                                     <i class="fas fa-envelope"></i>

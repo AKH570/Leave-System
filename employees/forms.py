@@ -1,9 +1,15 @@
 from django import forms
-from .models import EmpProfile, LeaveRequest, LeaveType, Employee
+from django.db import models
+from .models import EmpDesignation, EmpProfile, LeaveRequest, LeaveType, Employee
 from accounts.models import Registration
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
+
+
+class ProfilePictureInput(forms.ClearableFileInput):
+    template_name = 'widgets/profile_picture_input.html'
+
 
 class LeaveRequestForm(forms.ModelForm):
     leave_type = forms.ModelChoiceField(
@@ -56,6 +62,12 @@ class EmployeeRegistrationForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control'}))
     confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control'}))
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['designation'].queryset = EmpDesignation.objects.filter(
+            status=EmpDesignation.Status.ACTIVE,
+        )
+
     class Meta:
         model = Registration
         fields = [
@@ -68,7 +80,7 @@ class EmployeeRegistrationForm(forms.ModelForm):
             'username': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'phone': forms.TextInput(attrs={'class': 'form-control'}),
-            'designation': forms.TextInput(attrs={'class': 'form-control'}),
+            'designation': forms.Select(attrs={'class': 'form-select'}),
             'department': forms.Select(attrs={'class': 'form-select'}),
         }
 
@@ -82,12 +94,23 @@ class EmployeeRegistrationForm(forms.ModelForm):
         return cleaned_data
 
 class EmployeeProfileForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        active_designations = EmpDesignation.objects.filter(
+            status=EmpDesignation.Status.ACTIVE,
+        )
+        if self.instance and self.instance.designation_id:
+            active_designations = EmpDesignation.objects.filter(
+                models.Q(status=EmpDesignation.Status.ACTIVE)
+                | models.Q(pk=self.instance.designation_id),
+            )
+        self.fields['designation'].queryset = active_designations.distinct()
+
     class Meta:
         model = Employee
-        fields = ['employee_id', 'designation', 'department', 'supervisor', 'is_active']
+        fields = ['designation', 'department', 'supervisor', 'is_active']
         widgets = {
-            'employee_id': forms.TextInput(attrs={'class': 'form-control'}),
-            'designation': forms.TextInput(attrs={'class': 'form-control'}),
+            'designation': forms.Select(attrs={'class': 'form-select'}),
             'department': forms.Select(attrs={'class': 'form-select'}),
             'supervisor': forms.Select(attrs={'class': 'form-select'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
@@ -112,10 +135,14 @@ class EmpProfileForm(forms.ModelForm):
             'emergency_contact_number',
             'bio',
         ]
+        help_texts = {
+            'profile_picture': 'Upload a JPG, PNG, or WebP image up to 5 MB.',
+        }
         widgets = {
-            'profile_picture': forms.ClearableFileInput(attrs={
+            'profile_picture': ProfilePictureInput(attrs={
                 'class': 'form-control',
                 'accept': 'image/jpeg,image/png,image/webp',
+                'aria-describedby': 'id_profile_picture-help',
             }),
             'identification_no': forms.TextInput(attrs={
                 'class': 'form-control',

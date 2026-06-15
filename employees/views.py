@@ -101,6 +101,7 @@ class EmployeeProfileMixin(LoginRequiredMixin):
             self.employee = Employee.objects.select_related(
                 'user',
                 'department',
+                'designation',
                 'supervisor__user',
             ).get(user=request.user)
         except Employee.DoesNotExist:
@@ -151,6 +152,7 @@ class EmployeeDetailView(LoginRequiredMixin, AdminAccessMixin, DetailView):
         return Employee.objects.select_related(
             'user',
             'department',
+            'designation',
             'supervisor__user',
         )
 
@@ -265,6 +267,7 @@ class EmployeeListView(LoginRequiredMixin, AdminAccessMixin, ListView):
         queryset = Employee.objects.select_related(
             'user',
             'department',
+            'designation',
             'supervisor__user',
         ).annotate(
             used_leave_days=Coalesce(
@@ -290,7 +293,7 @@ class EmployeeListView(LoginRequiredMixin, AdminAccessMixin, ListView):
                 | Q(user__username__icontains=search_query)
                 | Q(user__email__icontains=search_query)
                 | Q(department__name__icontains=search_query)
-                | Q(designation__icontains=search_query)
+                | Q(designation__designation_name__icontains=search_query)
             )
 
         if status == 'active':

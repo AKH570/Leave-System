@@ -3,7 +3,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.db import transaction
 from django.shortcuts import render, redirect
 from .models import User
-from employees.models import Employee
+from employees.models import EmpDesignation, Employee
 from departments.models import Department
 from django.utils import timezone
 from datetime import datetime
@@ -43,7 +43,12 @@ def registration_view(request):
         return redirect('emp_dashboard')
 
     departments = Department.objects.all()
-    context = {'departments': departments}
+    context = {
+        'departments': departments,
+        'designations': EmpDesignation.objects.filter(
+            status=EmpDesignation.Status.ACTIVE,
+        ),
+    }
 
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
@@ -63,9 +68,8 @@ def registration_view(request):
                     # Create employee profile
                     Employee.objects.create(
                         user=user,
-                        employee_id=f"EMP{user.id:05d}",
                         department=form.cleaned_data.get('department'),
-                        designation=form.cleaned_data.get('designation') or 'Employee',
+                        designation=form.cleaned_data.get('designation'),
                         is_active=True
                     )
 
