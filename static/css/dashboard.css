@@ -217,6 +217,9 @@
 
 .dashboard-profile-dropdown {
     position:relative;
+    display:flex;
+    align-items:center;
+    gap:8px;
 }
 
 .dashboard-profile-trigger {
@@ -238,6 +241,24 @@
     background:#f5f7fb;
     box-shadow:inset 0 0 0 1px #e7ecf3;
     outline:0;
+}
+
+.dashboard-avatar-link {
+    display:inline-flex;
+    flex:0 0 auto;
+    border-radius:50%;
+    text-decoration:none;
+}
+
+.dashboard-avatar-control {
+    position:relative;
+    display:inline-flex;
+    flex:0 0 auto;
+}
+
+.dashboard-avatar-link:focus-visible {
+    outline:3px solid rgba(37,99,235,0.22);
+    outline-offset:3px;
 }
 
 .dashboard-profile-copy {
@@ -289,6 +310,33 @@
     border:2px solid #fff;
     border-radius:50%;
     background:#22c55e;
+}
+
+.dashboard-avatar-camera {
+    position:absolute;
+    right:-5px;
+    bottom:-2px;
+    z-index:2;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:22px;
+    height:22px;
+    border:2px solid #fff;
+    border-radius:50%;
+    color:#fff;
+    background:#2563eb;
+    box-shadow:0 6px 14px rgba(37,99,235,0.24);
+    font-size:0.64rem;
+    opacity:0.98;
+    transition:transform 0.16s ease, background-color 0.16s ease;
+}
+
+.dashboard-avatar-camera:hover,
+.dashboard-avatar-camera:focus-visible {
+    background:#1d4ed8;
+    outline:0;
+    transform:translateY(-1px);
 }
 
 .dashboard-profile-chevron {
@@ -419,6 +467,13 @@
 .dashboard-profile-menu .dashboard-logout-link:focus-visible i {
     color:#dc3545;
     background:#fff1f3;
+}
+
+.dashboard-avatar-modal {
+    border:0;
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:0 24px 60px rgba(15,23,42,0.24);
 }
 
 .profile-page {
@@ -676,9 +731,22 @@
     position:relative !important;
     right:auto !important;
     bottom:auto !important;
-    font-size:28px;
-    opacity:0.15;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:42px;
+    height:42px;
+    flex:0 0 42px;
+    border-radius:12px;
+    background:currentColor;
+    font-size:22px;
     margin-left:10px;
+    opacity:1;
+}
+
+.dashboard-card-title i::before {
+    color:#fff;
+    opacity:1;
 }
 
 /* ====================================
@@ -690,6 +758,7 @@
 }
 .bg-blue i{
     color:#0d6efd;
+    box-shadow:0 10px 18px rgba(13,110,253,0.22);
 }
 .bg-blue:hover{
     border-left-color:#0d6efd;
@@ -700,6 +769,7 @@
 }
 .bg-green i{
     color:#20c997;
+    box-shadow:0 10px 18px rgba(32,201,151,0.22);
 }
 .bg-green:hover{
     border-left-color:#20c997;
@@ -710,6 +780,7 @@
 }
 .bg-orange i{
     color:#fd7e14;
+    box-shadow:0 10px 18px rgba(253,126,20,0.22);
 }
 .bg-orange:hover{
     border-left-color:#fd7e14;
@@ -720,6 +791,7 @@
 }
 .bg-red i{
     color:#dc3545;
+    box-shadow:0 10px 18px rgba(220,53,69,0.22);
 }
 .bg-red:hover{
     border-left-color:#dc3545;
@@ -1091,7 +1163,10 @@
     }
 
     .dashboard-card-title i {
-        font-size:24px;
+        width:38px;
+        height:38px;
+        flex-basis:38px;
+        font-size:20px;
     }
 
     .table-section {
@@ -1149,6 +1224,10 @@
 
     .dashboard-profile-copy {
         display:none;
+    }
+
+    .dashboard-profile-trigger {
+        padding:8px;
     }
 
     .dashboard-navbar-date {
@@ -1222,7 +1301,11 @@
     }
 
     .dashboard-card-title i {
-        font-size:20px;
+        width:34px;
+        height:34px;
+        flex-basis:34px;
+        border-radius:10px;
+        font-size:17px;
     }
 
     .table-section {

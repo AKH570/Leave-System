@@ -8,6 +8,7 @@ urlpatterns = [
     path('leave/detail/<int:pk>/', views.LeaveDetailView.as_view(), name='leave_detail'),
     path('profile/', views.EmployeeProfileView.as_view(), name='employee_profile'),
     path('profile/edit/', views.EmployeeProfileUpdateView.as_view(), name='employee_profile_edit'),
+    path('profile/picture/upload/', views.profile_picture_upload, name='profile_picture_upload'),
     path('leave/cancel/<int:pk>/', views.leave_cancel, name='leave_cancel'),
     path('leave/approve/<int:pk>/', views.leave_approve, name='leave_approve'),
     path('leave/reject/<int:pk>/', views.leave_reject, name='leave_reject'),

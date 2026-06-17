@@ -61,18 +61,17 @@
 
             <form method="get" class="employee-filter-form" role="search">
                 <label class="employee-search">
-                    <span class="visually-hidden">Search employees</span>
                     <i class="fas fa-search" aria-hidden="true"></i>
                     <input
                         type="search"
                         name="q"
                         value="{{ search_query }}"
                         placeholder="Search name, ID, role..."
+                        aria-label="Search employees"
                     >
                 </label>
                 <label>
-                    <span class="visually-hidden">Filter by employee status</span>
-                    <select name="status" class="employee-status-filter">
+                    <select name="status" class="employee-status-filter" aria-label="Filter by employee status">
                         <option value="">All statuses</option>
                         <option value="active" {% if selected_status == 'active' %}selected{% endif %}>Active</option>
                         <option value="inactive" {% if selected_status == 'inactive' %}selected{% endif %}>Inactive</option>
@@ -87,7 +86,6 @@
 
         <div class="employee-table-wrap" tabindex="0" aria-label="Employee directory table">
             <table class="employee-table">
-                <!-- <caption class="visually-hidden">All employees with contact, department, designation, supervisor, leave balance, and status.</caption> -->
                 <thead>
                     <tr>
                         <th scope="col">Name</th>

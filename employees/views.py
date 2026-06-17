@@ -1,13 +1,22 @@
+from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Sum
 from django.db.models.functions import Coalesce
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, TemplateView
 from .models import EmpProfile, Employee, LeaveRequest, LeaveType
-from .forms import EmpProfileForm, LeaveRequestForm, LeaveApprovalForm, LeaveTypeForm
+from .forms import (
+    EmpProfileForm,
+    LeaveRequestForm,
+    LeaveApprovalForm,
+    LeaveTypeForm,
+    ProfilePictureForm,
+)
 
 class AdminAccessMixin(UserPassesTestMixin):
     """Ensures only Admin/HR can access certain views."""
@@ -142,6 +151,36 @@ class EmployeeProfileUpdateView(EmployeeProfileMixin, UpdateView):
     def form_invalid(self, form):
         messages.error(self.request, 'Please correct the errors below.')
         return super().form_invalid(form)
+
+
+@login_required
+@require_POST
+def profile_picture_upload(request):
+    try:
+        employee = Employee.objects.get(user=request.user)
+    except Employee.DoesNotExist:
+        return JsonResponse({'ok': False, 'error': 'Employee profile not found.'}, status=404)
+
+    profile, _ = EmpProfile.objects.get_or_create(employee=employee)
+    form = ProfilePictureForm(
+        request.POST,
+        request.FILES,
+        instance=profile,
+    )
+    if form.is_valid():
+        form.save()
+        image_url = profile.profile_picture.url if profile.profile_picture else ''
+        return JsonResponse({
+            'ok': True,
+            'image_url': image_url,
+            'fallback_url': request.build_absolute_uri('/static/images/avatar.png'),
+        })
+
+    errors = form.errors.get('profile_picture') or form.non_field_errors()
+    return JsonResponse({
+        'ok': False,
+        'error': errors.as_text() if errors else 'Unable to upload profile picture.',
+    }, status=400)
 
 class EmployeeDetailView(LoginRequiredMixin, AdminAccessMixin, DetailView):
     model = Employee

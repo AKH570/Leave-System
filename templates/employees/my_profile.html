@@ -8,18 +8,14 @@
 {% block content %}
 <div class="my-profile-page">
     <section class="my-profile-hero">
-        {% if profile.profile_picture %}
-            <img src="{{ profile.profile_picture.url }}" alt="{{ user.get_full_name|default:user.username }} profile picture" class="my-profile-avatar">
-        {% else %}
-            <img src="{% static 'images/avatar.png' %}" alt="{{ user.get_full_name|default:user.username }} profile picture" class="my-profile-avatar">
-        {% endif %}
+        <img src="{{ current_profile_picture_url }}" alt="{{ user.get_full_name|default:user.username }} profile picture" class="my-profile-avatar js-profile-avatar">
         <div class="my-profile-intro">
             <span>{{ employee.employee_id }}</span>
             <h1>{{ user.get_full_name|default:user.username }}</h1>
-            <p>{{ employee.designation|default:"Employee" }}{% if employee.department %} · {{ employee.department }}{% endif %}</p>
+            <p>{{ employee.designation|default:"Employee" }}{% if employee.department %} - {{ employee.department }}{% endif %}</p>
         </div>
-        <a href="{% url 'employee_profile_edit' %}" class="btn my-profile-edit-button">
-            <span aria-hidden="true">✎</span>
+        <a href="{% url 'employee_profile_edit' %}" class="btn btn-light my-profile-edit-button">
+            <i class="fas fa-pen" aria-hidden="true"></i>
             Edit profile
         </a>
     </section>

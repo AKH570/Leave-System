@@ -10,7 +10,7 @@
     <div class="my-profile-page-heading">
         <div>
             <span>My profile</span>
-            <h1>Edit additional information</h1>
+            <h1>Update additional information</h1>
             <p>Account and employment fields are read-only and managed by your organization.</p>
         </div>
         <a href="{% url 'employee_profile' %}" class="btn btn-light">Cancel</a>
@@ -84,6 +84,13 @@
                             {{ field.label }}
                             {% if field.field.required %}<span class="my-profile-required" aria-hidden="true">*</span>{% endif %}
                         </label>
+                        {% if field.name == 'profile_picture' %}
+                            <div class="my-profile-picture-manager">
+                                <div class="my-profile-picture-tools">
+                                    <span class="my-profile-picture-note">Choose an image from your device, then save the form.</span>
+                                </div>
+                            </div>
+                        {% endif %}
                         <div class="my-profile-control">{{ field }}</div>
                         {% if field.help_text %}<small class="form-text" id="{{ field.id_for_label }}-help">{{ field.help_text }}</small>{% endif %}
                         {% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}

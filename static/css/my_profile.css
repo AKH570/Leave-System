@@ -116,15 +116,51 @@
 }
 
 .my-profile-edit-button {
-    border-color: rgba(255, 255, 255, .35);
-    color: #fff;
-    background: rgba(255, 255, 255, .14);
-    font-size: .8rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-height: 44px;
+    padding: 9px 15px 9px 11px;
+    border: 1px solid rgba(255, 255, 255, .52);
+    border-radius: 999px;
+    color: #312e81;
+    background: #fff;
+    font-size: .82rem;
     font-weight: 800;
+    line-height: 1;
+    white-space: nowrap;
+    box-shadow: 0 12px 26px rgba(15, 23, 42, .2);
+    transition: transform .16s ease, box-shadow .16s ease, color .16s ease, background-color .16s ease, border-color .16s ease;
 }
 
-.my-profile-edit-button:hover {
-    color: #4338ca;
+.my-profile-edit-button i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    border-radius: 50%;
+    color: #fff;
+    background: #4f46e5;
+    font-size: .76rem;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .18);
+}
+
+.my-profile-edit-button:hover,
+.my-profile-edit-button:focus-visible {
+    border-color: #fff;
+    color: #fff;
+    background: #4f46e5;
+    box-shadow: 0 16px 30px rgba(15, 23, 42, .24);
+    outline: 0;
+    transform: translateY(-1px);
+}
+
+.my-profile-edit-button:hover i,
+.my-profile-edit-button:focus-visible i {
+    color: #4f46e5;
     background: #fff;
 }
 
@@ -418,6 +454,36 @@
     border-radius: 13px;
     background: #f8fafc;
     transition: border-color .16s ease, background-color .16s ease;
+}
+
+.my-profile-picture-manager {
+    margin-bottom:14px;
+    padding:14px;
+    border:1px solid #e2e8f0;
+    border-radius:14px;
+    background:#fff;
+}
+
+.my-profile-picture-tools {
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:8px;
+    min-width:0;
+}
+
+.my-profile-picture-tools .btn {
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    border-radius:9px;
+    font-weight:800;
+}
+
+.my-profile-picture-note {
+    color:#64748b;
+    font-size:.72rem;
+    line-height:1.45;
 }
 
 .my-profile-file-field .my-profile-control:hover,

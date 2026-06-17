@@ -94,6 +94,17 @@
                         <span class="dashboard-notification-dot" aria-hidden="true"></span>
                     </button>
                     <div class="dropdown dashboard-profile-dropdown">
+                        <div class="dashboard-avatar-control">
+                            <a class="dashboard-avatar-link" href="{% url 'employee_profile_edit' %}" aria-label="Manage profile picture">
+                                <span class="dashboard-avatar-wrap">
+                                    <img src="{{ current_profile_picture_url }}" alt="{{ user.get_full_name|default:user.username }} profile picture" class="dashboard-avatar js-profile-avatar">
+                                    <span class="dashboard-avatar-status" aria-label="Online"></span>
+                                </span>
+                            </a>
+                            <button class="dashboard-avatar-camera" type="button" data-bs-toggle="modal" data-bs-target="#dashboardAvatarModal" aria-label="Change profile picture">
+                                <i class="fas fa-camera" aria-hidden="true"></i>
+                            </button>
+                        </div>
                         <button class="dashboard-profile-trigger" type="button" id="userDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
                             <span class="dashboard-profile-copy">
                                 <strong>{{ user.get_full_name|default:user.username }}</strong>
@@ -107,16 +118,12 @@
                                     {% endif %}
                                 </small>
                             </span>
-                            <span class="dashboard-avatar-wrap">
-                                <img src="{% static 'images/avatar.png' %}" alt="{{ user.get_full_name|default:user.username }} profile picture" class="dashboard-avatar">
-                                <span class="dashboard-avatar-status" aria-label="Online"></span>
-                            </span>
                             <i class="fas fa-chevron-down dashboard-profile-chevron" aria-hidden="true"></i>
                         </button>
 
                         <ul class="dropdown-menu dropdown-menu-end dashboard-profile-menu" aria-labelledby="userDropdown">
                             <li class="dashboard-profile-menu-header">
-                                <img src="{% static 'images/avatar.png' %}" alt="" class="dashboard-avatar dashboard-avatar--menu">
+                                <img src="{{ current_profile_picture_url }}" alt="" class="dashboard-avatar dashboard-avatar--menu js-profile-avatar">
                                 <span>
                                     <strong>{{ user.get_full_name|default:user.username }}</strong>
                                     <small>{{ user.email|default:user.username }}</small>
@@ -180,30 +187,88 @@
             const trigger = document.getElementById('userDropdown');
             const menu = trigger ? trigger.nextElementSibling : null;
 
-            if (!trigger || !menu) return;
+            if (trigger && menu) {
+                trigger.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                    const isOpen = menu.classList.toggle('show');
+                    trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                });
 
-            trigger.addEventListener('click', function (event) {
-                event.stopPropagation();
-                const isOpen = menu.classList.toggle('show');
-                trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-            });
+                menu.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                });
 
-            menu.addEventListener('click', function (event) {
-                event.stopPropagation();
-            });
-
-            document.addEventListener('click', function () {
-                menu.classList.remove('show');
-                trigger.setAttribute('aria-expanded', 'false');
-            });
-
-            document.addEventListener('keydown', function (event) {
-                if (event.key === 'Escape') {
+                document.addEventListener('click', function () {
                     menu.classList.remove('show');
                     trigger.setAttribute('aria-expanded', 'false');
-                    trigger.focus();
+                });
+
+                document.addEventListener('keydown', function (event) {
+                    if (event.key === 'Escape') {
+                        menu.classList.remove('show');
+                        trigger.setAttribute('aria-expanded', 'false');
+                        trigger.focus();
+                    }
+                });
+            }
+
+            const form = document.getElementById('dashboardAvatarForm');
+            const input = document.getElementById('dashboardAvatarInput');
+            const saveButton = document.getElementById('dashboardAvatarSave');
+            let selectedFile = null;
+
+            function validateImage(file) {
+                const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+                if (!allowed.includes(file.type)) return 'Upload a JPG, JPEG, PNG, or WebP image.';
+                if (file.size > 5 * 1024 * 1024) return 'Profile picture must be 5 MB or smaller.';
+                return '';
+            }
+
+            function setSelectedFile(file) {
+                const error = validateImage(file);
+                if (error) {
+                    window.alert(error);
+                    selectedFile = null;
+                    if (saveButton) saveButton.disabled = true;
+                    return;
                 }
-            });
+                selectedFile = file;
+                if (saveButton) saveButton.disabled = false;
+            }
+
+            if (input) {
+                input.addEventListener('change', function () {
+                    if (input.files && input.files[0]) setSelectedFile(input.files[0]);
+                });
+            }
+
+            if (form) {
+                form.addEventListener('submit', async function (event) {
+                    event.preventDefault();
+                    if (!selectedFile) return;
+                    const formData = new FormData();
+                    formData.append('profile_picture', selectedFile);
+                    formData.append('csrfmiddlewaretoken', form.querySelector('[name=csrfmiddlewaretoken]').value);
+                    saveButton.disabled = true;
+                    try {
+                        const response = await fetch(form.dataset.uploadUrl, {
+                            method: 'POST',
+                            body: formData,
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        });
+                        const data = await response.json();
+                        if (!response.ok || !data.ok) throw new Error(data.error || 'Upload failed.');
+                        const freshUrl = data.image_url + '?v=' + Date.now();
+                        document.querySelectorAll('.js-profile-avatar').forEach(function (image) {
+                            image.src = freshUrl;
+                        });
+                        selectedFile = null;
+                    } catch (error) {
+                        saveButton.disabled = false;
+                        window.alert(error.message || 'Unable to upload profile picture.');
+                    }
+                });
+            }
         });
     </script>
 

@@ -167,4 +167,32 @@ class EmpProfileForm(forms.ModelForm):
         picture = self.cleaned_data.get('profile_picture')
         if picture and picture.size > self.MAX_PROFILE_PICTURE_SIZE:
             raise forms.ValidationError('Profile picture must be 5 MB or smaller.')
+        if picture and getattr(picture, 'content_type', '') not in {
+            'image/jpeg',
+            'image/png',
+            'image/webp',
+        }:
+            raise forms.ValidationError('Upload a JPG, JPEG, PNG, or WebP image.')
+        return picture
+
+
+class ProfilePictureForm(forms.ModelForm):
+    MAX_PROFILE_PICTURE_SIZE = EmpProfileForm.MAX_PROFILE_PICTURE_SIZE
+
+    class Meta:
+        model = EmpProfile
+        fields = ['profile_picture']
+
+    def clean_profile_picture(self):
+        picture = self.cleaned_data.get('profile_picture')
+        if not picture:
+            raise forms.ValidationError('Choose a profile picture to upload.')
+        if picture.size > self.MAX_PROFILE_PICTURE_SIZE:
+            raise forms.ValidationError('Profile picture must be 5 MB or smaller.')
+        if getattr(picture, 'content_type', '') not in {
+            'image/jpeg',
+            'image/png',
+            'image/webp',
+        }:
+            raise forms.ValidationError('Upload a JPG, JPEG, PNG, or WebP image.')
         return picture
