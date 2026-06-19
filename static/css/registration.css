@@ -24,7 +24,8 @@ body {
     background:
         radial-gradient(circle at top left, rgba(99, 102, 241, .11), transparent 30rem),
         linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
-    font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: "Open Sans", sans-serif;
+    font-size: 16px;
 }
 
 .login-page,
