@@ -3,6 +3,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
 from django.db.models import Q, Sum
 from django.db.models.functions import Coalesce
 from django.utils import timezone
@@ -79,6 +80,8 @@ class LeaveApplyView(LoginRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['employee'] = self.employee
+        context['leave_balance'] = self.employee.get_leave_summary()['balance']
+        context['uses_custom_leave'] = self.employee.custom_leave is not None
         context['messages_in_content'] = True
         return context
 
@@ -199,19 +202,13 @@ class EmployeeDetailView(LoginRequiredMixin, AdminAccessMixin, DetailView):
         context = super().get_context_data(**kwargs)
         employee = self.object
         current_year = timezone.now().year
-        yearly_leave_allowance = LeaveType.objects.aggregate(
-            total=Coalesce(Sum('yearly_limit'), 0)
-        )['total']
-        used_leave_days = LeaveRequest.objects.filter(
-            employee=employee,
-            status='APPROVED',
-            from_date__year=current_year,
-        ).aggregate(total=Coalesce(Sum('total_days'), 0))['total']
+        leave_summary = employee.get_leave_summary(current_year)
 
         context.update({
-            'yearly_leave_allowance': yearly_leave_allowance,
-            'used_leave_days': used_leave_days,
-            'leave_balance': max(yearly_leave_allowance - used_leave_days, 0),
+            'yearly_leave_allowance': leave_summary['allowance'],
+            'used_leave_days': leave_summary['used'],
+            'leave_balance': leave_summary['balance'],
+            'uses_custom_leave': leave_summary['uses_custom_leave'],
             'current_year': current_year,
             'recent_leaves': employee.leave_requests.select_related(
                 'leave_type',
@@ -250,15 +247,16 @@ def leave_approve(request, pk):
             return redirect('dashboard')
 
         remarks = request.POST.get('remarks', '')
-        leave.status = 'APPROVED'
-        leave.remarks = remarks
         try:
-            leave.approved_by = request.user.employee_profile
+            approved_by = request.user.employee_profile
         except Employee.DoesNotExist:
-            leave.approved_by = None
-        leave.approved_at = timezone.now()
-        leave.save()
-        messages.success(request, f"Leave request for {leave.employee} approved.")
+            approved_by = None
+        try:
+            leave.approve(approved_by=approved_by, remarks=remarks)
+        except ValidationError as error:
+            messages.error(request, '; '.join(error.messages))
+        else:
+            messages.success(request, f"Leave request for {leave.employee} approved.")
     return redirect('dashboard')
 
 def leave_reject(request, pk):
@@ -292,6 +290,12 @@ class LeaveTypeListView(LoginRequiredMixin, AdminAccessMixin, ListView):
     context_object_name = 'leave_types'
 
 class LeaveTypeCreateView(LoginRequiredMixin, AdminAccessMixin, CreateView):
+    model = LeaveType
+    form_class = LeaveTypeForm
+    template_name = 'leaves/leave_type_form.html'
+    success_url = reverse_lazy('leave_type_list')
+
+class LeaveTypeUpdateView(LoginRequiredMixin, AdminAccessMixin, UpdateView):
     model = LeaveType
     form_class = LeaveTypeForm
     template_name = 'leaves/leave_type_form.html'
@@ -345,16 +349,12 @@ class EmployeeListView(LoginRequiredMixin, AdminAccessMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         all_employees = Employee.objects.all()
-        yearly_leave_allowance = LeaveType.objects.aggregate(
-            total=Coalesce(Sum('yearly_limit'), 0)
-        )['total']
-
         for employee in context['employees']:
-            employee.yearly_leave_allowance = yearly_leave_allowance
-            employee.leave_balance = max(
-                yearly_leave_allowance - employee.used_leave_days,
-                0,
-            )
+            leave_summary = employee.get_leave_summary(timezone.now().year)
+            employee.yearly_leave_allowance = leave_summary['allowance']
+            employee.used_leave_days = leave_summary['used']
+            employee.leave_balance = leave_summary['balance']
+            employee.uses_custom_leave = leave_summary['uses_custom_leave']
 
         context.update({
             'total_employees': all_employees.count(),

@@ -132,7 +132,13 @@
                         <td>
                             <span class="employee-balance">
                                 <strong>{{ employee.leave_balance }} day{{ employee.leave_balance|pluralize }}</strong>
-                                <small>{{ employee.used_leave_days }} used of {{ employee.yearly_leave_allowance }}</small>
+                                <small>
+                                    {% if employee.uses_custom_leave %}
+                                        Custom balance; {{ employee.used_leave_days }} approved day{{ employee.used_leave_days|pluralize }} recorded
+                                    {% else %}
+                                        {{ employee.used_leave_days }} used of {{ employee.yearly_leave_allowance }}
+                                    {% endif %}
+                                </small>
                             </span>
                         </td>
                         <td>

@@ -1,0 +1,212 @@
+.leave-type-form-page {
+    padding: 14px 0 36px;
+    color: #172033;
+}
+
+.leave-type-form-shell {
+    width: 100%;
+    max-width: 650px;
+    margin: 0 auto;
+}
+
+.leave-type-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    color: #667085;
+    font-size: .84rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.leave-type-back-link:hover,
+.leave-type-back-link:focus {
+    color: #4338ca;
+}
+
+.leave-type-form-card {
+    overflow: hidden;
+    border: 1px solid #e5eaf1;
+    background: #fff;
+    box-shadow: 0 20px 45px rgba(15, 23, 42, .09) !important;
+}
+
+.leave-type-form-header {
+    display: flex;
+    align-items: center;
+    gap: 17px;
+    padding: 25px 28px;
+    border-bottom: 1px solid #e8edf4;
+    background: linear-gradient(135deg, #f8faff 0%, #f3f0ff 100%);
+}
+
+.leave-type-form-icon {
+    display: grid;
+    width: 52px;
+    height: 52px;
+    flex: 0 0 52px;
+    place-items: center;
+    border-radius: 15px;
+    color: #fff;
+    font-size: 1.2rem;
+    background: linear-gradient(135deg, #4338ca, #7c3aed);
+    box-shadow: 0 10px 22px rgba(79, 70, 229, .24);
+}
+
+.leave-type-form-eyebrow {
+    display: block;
+    margin-bottom: 4px;
+    color: #6366f1;
+    font-size: .67rem;
+    font-weight: 800;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+
+.leave-type-form-header h1 {
+    margin: 0 0 5px;
+    color: #172033;
+    font-size: clamp(1.35rem, 3vw, 1.65rem);
+    font-weight: 800;
+    letter-spacing: -.02em;
+}
+
+.leave-type-form-header p {
+    margin: 0;
+    color: #7c8aa0;
+    font-size: .86rem;
+}
+
+.leave-type-form-body {
+    padding: 28px;
+}
+
+.leave-type-field {
+    margin-bottom: 23px;
+}
+
+.leave-type-field .form-label {
+    margin-bottom: 8px;
+    color: #344054;
+    font-size: .84rem;
+    font-weight: 800;
+}
+
+.leave-type-field .form-label span {
+    color: #dc2626;
+}
+
+.leave-type-field .form-control,
+.leave-type-field .form-select {
+    width: 100%;
+    min-height: 48px;
+    border: 1px solid #d9e0e9;
+    border-radius: 11px;
+    color: #243047;
+    font-size: .9rem;
+    background-color: #fff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .02);
+}
+
+.leave-type-field .form-control:focus,
+.leave-type-field .form-select:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 .22rem rgba(99, 102, 241, .13);
+}
+
+.leave-type-field .form-text {
+    margin-top: 7px;
+    color: #8491a5 !important;
+    font-size: .76rem;
+    line-height: 1.45;
+}
+
+.leave-type-field .invalid-feedback {
+    margin-top: 7px;
+    color: #dc2626;
+    font-size: .78rem;
+    font-weight: 650;
+}
+
+.leave-type-form-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 22px;
+    border: 1px solid #fecaca;
+    border-radius: 11px;
+    font-size: .82rem;
+}
+
+.leave-type-form-alert ul {
+    margin: 0;
+    padding-left: 18px;
+}
+
+.leave-type-form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    margin: 6px -28px -28px;
+    padding: 18px 28px;
+    border-top: 1px solid #e8edf4;
+    background: #fafbfc;
+}
+
+.leave-type-form-actions .btn {
+    display: inline-flex;
+    min-height: 42px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 9px 17px;
+    border-radius: 10px;
+    font-size: .85rem;
+    font-weight: 800;
+}
+
+.leave-type-form-actions .btn-primary {
+    border-color: #4f46e5;
+    background: #4f46e5;
+    box-shadow: 0 8px 18px rgba(79, 70, 229, .18);
+}
+
+.leave-type-form-actions .btn-primary:hover,
+.leave-type-form-actions .btn-primary:focus {
+    border-color: #4338ca;
+    background: #4338ca;
+}
+
+@media (max-width: 575.98px) {
+    .leave-type-form-page {
+        padding-top: 7px;
+    }
+
+    .leave-type-form-header {
+        align-items: flex-start;
+        padding: 22px 20px;
+    }
+
+    .leave-type-form-icon {
+        width: 46px;
+        height: 46px;
+        flex-basis: 46px;
+    }
+
+    .leave-type-form-body {
+        padding: 22px 20px;
+    }
+
+    .leave-type-form-actions {
+        align-items: stretch;
+        flex-direction: column-reverse;
+        margin: 4px -20px -22px;
+        padding: 16px 20px;
+    }
+
+    .leave-type-form-actions .btn {
+        width: 100%;
+    }
+}

@@ -145,6 +145,9 @@
                         {{ leave_balance|default:"--" }}
                         <span>Days</span>
                     </h2>
+                    {% if uses_custom_leave %}
+                        <p class="mb-0">Your admin-defined shared leave balance</p>
+                    {% endif %}
                 </div>
 
                 <section class="leave-side-card">

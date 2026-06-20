@@ -26,7 +26,9 @@
                         <i class="fas fa-wallet"></i>
                     </div>
                     <h2>{{ leave_balance|default:"0" }}</h2>
-                    <p class="mb-0">Days available for leave</p>
+                    <p class="mb-0">
+                        {% if uses_custom_leave %}Custom balance remaining{% else %}Days available for leave{% endif %}
+                    </p>
                 </div>
             </div>
 

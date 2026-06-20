@@ -30,9 +30,15 @@
             <p>{{ employee.designation|default:"Employee" }}</p>
         </div>
         <div class="employee-detail-balance">
-            <span>{{ current_year }} leave balance</span>
+            <span>{% if uses_custom_leave %}Custom leave balance{% else %}{{ current_year }} leave balance{% endif %}</span>
             <strong>{{ leave_balance }} day{{ leave_balance|pluralize }}</strong>
-            <small>{{ used_leave_days }} used of {{ yearly_leave_allowance }}</small>
+            <small>
+                {% if uses_custom_leave %}
+                    {{ used_leave_days }} approved day{{ used_leave_days|pluralize }} recorded
+                {% else %}
+                    {{ used_leave_days }} used of {{ yearly_leave_allowance }}
+                {% endif %}
+            </small>
         </div>
     </section>
 
@@ -52,6 +58,7 @@
                 <div><dt>Supervisor</dt><dd>{% if employee.supervisor %}{{ employee.supervisor.user.get_full_name|default:employee.supervisor.user.username }}{% else %}Not assigned{% endif %}</dd></div>
                 <div><dt>Joining date</dt><dd>{{ employee.joining_date|date:"d F Y" }}</dd></div>
                 <div><dt>Status</dt><dd>{% if employee.is_active %}Active{% else %}Inactive{% endif %}</dd></div>
+                <div><dt>Custom leave</dt><dd>{{ employee.custom_leave|default_if_none:"Not assigned" }}</dd></div>
             </dl>
         </article>
 

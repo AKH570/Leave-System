@@ -1,14 +1,144 @@
+from datetime import timedelta
+
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db.models.deletion import ProtectedError
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
-from .forms import EmployeeProfileForm
-from .models import EmpDesignation, EmpProfile, Employee
+from .forms import EmployeeProfileForm, LeaveRequestForm, LeaveTypeForm
+from .models import EmpDesignation, EmpProfile, Employee, LeaveRequest, LeaveType
 
 
 User = get_user_model()
+
+
+class CustomLeaveTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='custom-leave-employee',
+            password='test-password',
+        )
+        self.employee = Employee.objects.create(
+            user=self.user,
+            custom_leave=5,
+        )
+        self.leave_type = LeaveType.objects.create(
+            name=LeaveType.CASUAL,
+            yearly_limit=1,
+        )
+        today = timezone.localdate()
+        self.form_data = {
+            'leave_type': self.leave_type.pk,
+            'from_date': today,
+            'to_date': today + timedelta(days=2),
+            'reason': 'Custom allocation test',
+        }
+
+    def test_custom_leave_cannot_be_negative(self):
+        self.employee.custom_leave = -1
+
+        with self.assertRaises(ValidationError):
+            self.employee.full_clean()
+
+    def test_custom_balance_ignores_leave_type_limit(self):
+        form = LeaveRequestForm(self.form_data, employee=self.employee)
+
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_request_over_custom_balance_is_rejected(self):
+        self.form_data['to_date'] += timedelta(days=3)
+        form = LeaveRequestForm(self.form_data, employee=self.employee)
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('Insufficient custom leave balance', str(form.errors))
+
+    def test_approval_deducts_custom_balance(self):
+        form = LeaveRequestForm(self.form_data, employee=self.employee)
+        self.assertTrue(form.is_valid(), form.errors)
+        leave = form.save()
+
+        leave.approve(remarks='Approved')
+
+        self.employee.refresh_from_db()
+        self.assertEqual(self.employee.custom_leave, 2)
+        self.assertEqual(leave.status, 'APPROVED')
+
+    def test_approval_does_not_overdraw_changed_custom_balance(self):
+        leave = LeaveRequest.objects.create(
+            employee=self.employee,
+            leave_type=self.leave_type,
+            from_date=self.form_data['from_date'],
+            to_date=self.form_data['to_date'],
+            total_days=3,
+            reason='Balance changed while pending',
+        )
+        self.employee.custom_leave = 2
+        self.employee.save(update_fields=['custom_leave'])
+
+        with self.assertRaisesMessage(ValidationError, '2 days remaining'):
+            leave.approve()
+
+        leave.refresh_from_db()
+        self.employee.refresh_from_db()
+        self.assertEqual(leave.status, 'PENDING')
+        self.assertEqual(self.employee.custom_leave, 2)
+
+    def test_normal_employee_keeps_leave_type_validation(self):
+        self.employee.custom_leave = None
+        self.employee.save(update_fields=['custom_leave'])
+        form = LeaveRequestForm(self.form_data, employee=self.employee)
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('Insufficient balance', str(form.errors))
+
+
+class LeaveTypeTests(TestCase):
+    def test_name_defaults_to_casual_leave(self):
+        leave_type = LeaveType.objects.create(yearly_limit=12)
+
+        self.assertEqual(leave_type.name, LeaveType.CASUAL)
+        self.assertEqual(str(leave_type), 'Casual Leave')
+
+    def test_form_renders_name_as_select_with_supported_choices(self):
+        form = LeaveTypeForm()
+
+        self.assertEqual(form.fields['name'].initial, LeaveType.CASUAL)
+        self.assertEqual(
+            list(form.fields['name'].choices),
+            LeaveType.LEAVE_TYPE_CHOICES,
+        )
+        self.assertEqual(form.fields['name'].widget.__class__.__name__, 'Select')
+        self.assertNotIn('description', form.fields)
+
+    def test_admin_leave_type_pages_render(self):
+        user = User.objects.create_user(
+            username='leave-type-admin',
+            password='test-password',
+            is_staff=True,
+        )
+        self.client.force_login(user)
+
+        list_response = self.client.get(reverse('leave_type_list'))
+        create_response = self.client.get(reverse('leave_type_add'))
+
+        self.assertEqual(list_response.status_code, 200)
+        self.assertEqual(create_response.status_code, 200)
+        self.assertContains(create_response, '<select', html=False)
+        self.assertContains(create_response, 'Casual Leave')
+        self.assertNotContains(create_response, 'Description')
+
+        leave_type = LeaveType.objects.create(
+            name=LeaveType.SICK,
+            yearly_limit=10,
+        )
+        edit_response = self.client.get(reverse('leave_type_edit', args=[leave_type.pk]))
+
+        self.assertEqual(edit_response.status_code, 200)
+        self.assertContains(edit_response, 'Edit Leave Type')
+        self.assertContains(edit_response, 'Update leave category and yearly limit')
+        self.assertContains(edit_response, 'Save Changes')
 
 
 class EmployeeIdTests(TestCase):

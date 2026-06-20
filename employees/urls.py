@@ -14,6 +14,7 @@ urlpatterns = [
     path('leave/reject/<int:pk>/', views.leave_reject, name='leave_reject'),
     path('leave-types/', views.LeaveTypeListView.as_view(), name='leave_type_list'),
     path('leave-types/add/', views.LeaveTypeCreateView.as_view(), name='leave_type_add'),
+    path('leave-types/<int:pk>/edit/', views.LeaveTypeUpdateView.as_view(), name='leave_type_edit'),
     path('employees/', views.EmployeeListView.as_view(), name='employee_list'),
     path('employees/<int:pk>/', views.EmployeeDetailView.as_view(), name='employee_detail'),
 ]

@@ -40,7 +40,14 @@ class EmpDesignationAdmin(admin.ModelAdmin):
 
 @admin.register(Employee)
 class EmployeeAdmin(admin.ModelAdmin):
-    list_display = ('employee_id', 'get_full_name', 'department', 'designation', 'is_active')
+    list_display = (
+        'employee_id',
+        'get_full_name',
+        'department',
+        'designation',
+        'custom_leave',
+        'is_active',
+    )
     search_fields = (
         'employee_id',
         'user__first_name',
@@ -52,6 +59,17 @@ class EmployeeAdmin(admin.ModelAdmin):
     readonly_fields = ('employee_id', 'joining_date')
     list_select_related = ('user', 'department', 'designation')
     autocomplete_fields = ('designation',)
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = list(super().get_readonly_fields(request, obj))
+        is_admin = request.user.is_superuser or getattr(
+            request.user,
+            'role',
+            '',
+        ) == 'ADMIN'
+        if not is_admin:
+            readonly_fields.append('custom_leave')
+        return readonly_fields
 
     def get_full_name(self, obj):
         return obj.user.get_full_name()
@@ -74,8 +92,9 @@ class EmpProfileAdmin(admin.ModelAdmin):
 
 @admin.register(LeaveType)
 class LeaveTypeAdmin(admin.ModelAdmin):
-    list_display = ('name', 'yearly_limit', 'description')
+    list_display = ('name', 'yearly_limit')
     search_fields = ('name',)
+    list_filter = ('name',)
 
 
 @admin.register(LeaveRequest)

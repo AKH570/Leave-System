@@ -1,0 +1,81 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/leave_type_list.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="leave-types-page">
+    <header class="leave-types-header">
+        <div class="leave-types-heading">
+            <span class="leave-types-eyebrow">Leave configuration</span>
+            <h1>Leave Types</h1>
+            <p>Manage leave categories and yearly leave limits</p>
+        </div>
+        <a href="{% url 'leave_type_add' %}" class="btn btn-primary leave-types-add-button">
+            <i class="fas fa-plus" aria-hidden="true"></i>
+            <span>Add Leave Type</span>
+        </a>
+    </header>
+
+    <section class="card shadow-sm rounded-4 leave-types-card" aria-labelledby="leave-types-table-title">
+        <div class="leave-types-card-header">
+            <div>
+                <h2 id="leave-types-table-title">Configured Leave Types</h2>
+                <p>{{ leave_types|length }} leave categor{{ leave_types|length|pluralize:"y,ies" }} available</p>
+            </div>
+            <span class="leave-types-count" aria-label="{{ leave_types|length }} leave types">{{ leave_types|length }}</span>
+        </div>
+
+        <div class="table-responsive leave-types-table-wrap">
+            <table class="table table-hover table-striped align-middle mb-0 leave-types-table">
+                <thead>
+                    <tr>
+                        <th scope="col" class="leave-types-serial">SL No.</th>
+                        <th scope="col">Leave Type</th>
+                        <th scope="col">Yearly Limit</th>
+                        <th scope="col" class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for leave_type in leave_types %}
+                        <tr>
+                            <td class="leave-types-serial"><span class="leave-types-row-number">{{ forloop.counter|stringformat:"02d" }}</span></td>
+                            <td>
+                                <div class="leave-type-name">
+                                    <span class="leave-type-icon"><i class="fas fa-calendar-check" aria-hidden="true"></i></span>
+                                    <strong>{{ leave_type.get_name_display }}</strong>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge rounded-pill leave-limit-badge">
+                                    {{ leave_type.yearly_limit }} day{{ leave_type.yearly_limit|pluralize }}
+                                </span>
+                            </td>
+                            <td class="text-end leave-types-actions">
+                                <a href="{% url 'leave_type_edit' leave_type.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-pen" aria-hidden="true"></i> Edit
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="leave-types-empty-cell">
+                                <div class="leave-types-empty">
+                                    <span class="leave-types-empty-icon"><i class="fas fa-calendar-plus" aria-hidden="true"></i></span>
+                                    <h3>No leave types yet</h3>
+                                    <p>Create your first leave type to start configuring employee leave allowances.</p>
+                                    <a href="{% url 'leave_type_add' %}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-plus" aria-hidden="true"></i> Add Leave Type
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

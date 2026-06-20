@@ -72,6 +72,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'employees.context_processors.current_profile_picture',
+                'employees.context_processors.pending_leave_notifications',
             ],
         },
     },

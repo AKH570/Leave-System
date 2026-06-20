@@ -25,10 +25,10 @@
     <!-- Sidebar -->
     <div class="sidebar">
 
-        <div class="logo">
-            <img src="{% static 'assets/images/logos/logo.webp' %}" width="70" alt="">
-            <h3>Leaveora</h3>
-            <p>"your easy leave solution"</p>
+        <div class="sidebar-logo">
+            <a href="{% url 'dashboard' %}" aria-label="LeaveBox dashboard">
+                <img src="{% static 'images/leavebox-logo.png' %}" alt="LeaveBox Logo" class="site-logo">
+            </a>
         </div>
 
         <ul>
@@ -39,6 +39,26 @@
                     Dashboard
                 </a>
             </li>
+             {% if user.is_staff or user.role == 'ADMIN' %}
+            <li>
+                <a href="{% url 'employee_list' %}">
+                    <i class="fas fa-users" role="img" aria-label="Employees"></i>
+                    Employees
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'leave_type_list' %}">
+                    <i class="fas fa-calendar-check"></i>
+                    Leave Types
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'leave_type_list' %}">
+                    <i class="fas fa-list"></i>
+                    Leave Settings
+                </a>
+            </li>
+            {% else %}
 
             <li>
                 <a href="{% url 'leave_apply' %}">
@@ -53,22 +73,7 @@
                     My Leaves
                 </a>
             </li>
-
-            {% if user.is_staff or user.role == 'ADMIN' %}
-            <li>
-                <a href="{% url 'employee_list' %}">
-                    <i class="fas fa-users" role="img" aria-label="Employees"></i>
-                    Employees
-                </a>
-            </li>
-            <li>
-                <a href="{% url 'leave_type_list' %}">
-                    <i class="fas fa-list"></i>
-                    Leave Types
-                </a>
-            </li>
             {% endif %}
-
             <li>
                 <a href="{% url 'accounts:logout' %}">
                     <i class="fas fa-sign-out-alt"></i>
@@ -90,13 +95,59 @@
                         <span class="dashboard-navbar-date-full">{% now "l, d F Y" %}</span>
                         <span class="dashboard-navbar-date-short">{% now "d M Y" %}</span>
                     </div>
-                    <button class="dashboard-notification-button" type="button" aria-label="Notifications">
-                        <svg class="dashboard-notification-icon" viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
-                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                        </svg>
-                        <span class="dashboard-notification-dot" aria-hidden="true"></span>
-                    </button>
+                    <div class="dashboard-notification-dropdown">
+                        <button class="dashboard-notification-button" type="button" id="notificationDropdown" aria-label="Notifications{% if pending_leave_count %}: {{ pending_leave_count }} pending leave request{{ pending_leave_count|pluralize }}{% endif %}" aria-haspopup="true" aria-expanded="false">
+                            <svg class="dashboard-notification-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                            </svg>
+                            {% if pending_leave_count %}
+                                <span class="dashboard-notification-badge" aria-hidden="true">{{ pending_leave_count }}</span>
+                            {% endif %}
+                        </button>
+
+                        <div class="dashboard-notification-menu" id="notificationMenu" role="menu" aria-labelledby="notificationDropdown">
+                            <div class="dashboard-notification-header">
+                                <div>
+                                    <strong>Pending Requests</strong>
+                                    <small>{{ pending_leave_count }} pending request{{ pending_leave_count|pluralize }}</small>
+                                </div>
+                                {% if pending_leave_count %}<span>{{ pending_leave_count }}</span>{% endif %}
+                            </div>
+
+                            <div class="dashboard-notification-list">
+                                {% for leave in recent_pending_leaves %}
+                                    <article class="dashboard-notification-item" role="menuitem">
+                                        <div class="dashboard-notification-item-heading">
+                                            <strong>{{ leave.employee.user.get_full_name|default:leave.employee.user.username }}</strong>
+                                            <span>{{ leave.get_status_display }}</span>
+                                        </div>
+                                        <div class="dashboard-notification-meta">
+                                            <span><i class="fas fa-id-badge" aria-hidden="true"></i>{{ leave.employee.employee_id }}</span>
+                                            <span><i class="fas fa-calendar-check" aria-hidden="true"></i>{{ leave.leave_type.name }}</span>
+                                        </div>
+                                        <dl class="dashboard-notification-dates">
+                                            <div><dt>From</dt><dd>{{ leave.from_date|date:"d M Y" }}</dd></div>
+                                            <div><dt>To</dt><dd>{{ leave.to_date|date:"d M Y" }}</dd></div>
+                                            <div><dt>Applied</dt><dd>{{ leave.applied_at|date:"d M Y" }}</dd></div>
+                                        </dl>
+                                    </article>
+                                {% empty %}
+                                    <div class="dashboard-notification-empty">
+                                        <i class="fas fa-check-circle" aria-hidden="true"></i>
+                                        <strong>You're all caught up</strong>
+                                        <span>No pending leave requests.</span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            {% if user.is_staff or user.is_superuser or user.role == 'ADMIN' %}
+                                <a class="dashboard-notification-footer" href="{% url 'dashboard' %}#leave-requests">View All Requests <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+                            {% else %}
+                                <a class="dashboard-notification-footer" href="{% url 'leave_history' %}">View All Requests <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+                            {% endif %}
+                        </div>
+                    </div>
                     <div class="dropdown dashboard-profile-dropdown">
                         <div class="dashboard-avatar-control">
                             <a class="dashboard-avatar-link" href="{% url 'employee_profile_edit' %}" aria-label="Manage profile picture">
@@ -188,6 +239,34 @@
     <script src="{% static 'js/dashboard.js' %}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            const notificationTrigger = document.getElementById('notificationDropdown');
+            const notificationMenu = document.getElementById('notificationMenu');
+
+            if (notificationTrigger && notificationMenu) {
+                notificationTrigger.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                    const isOpen = notificationMenu.classList.toggle('show');
+                    notificationTrigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                });
+
+                notificationMenu.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                });
+
+                document.addEventListener('click', function () {
+                    notificationMenu.classList.remove('show');
+                    notificationTrigger.setAttribute('aria-expanded', 'false');
+                });
+
+                document.addEventListener('keydown', function (event) {
+                    if (event.key === 'Escape') {
+                        notificationMenu.classList.remove('show');
+                        notificationTrigger.setAttribute('aria-expanded', 'false');
+                        notificationTrigger.focus();
+                    }
+                });
+            }
+
             const trigger = document.getElementById('userDropdown');
             const menu = trigger ? trigger.nextElementSibling : null;
 

@@ -56,25 +56,31 @@ body {
 .registration-header {
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 24px 28px;
+    justify-content: center;
+    flex-direction: column;
+    gap: 0;
+    padding: 28px 28px 25px;
     border-bottom: 1px solid #e8edf4;
     background: linear-gradient(135deg, #ffffff 0%, #f5f6ff 100%);
+    text-align: center;
 }
 
 .registration-logo {
-    width: 54px;
-    height: 54px;
-    flex: 0 0 54px;
-    padding: 9px;
-    border: 1px solid #dddffc;
-    border-radius: 14px;
-    background: #eef0ff;
+    display: block;
+    width: min(240px, 80%);
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto 16px;
     object-fit: contain;
+    transition: transform .3s ease;
+}
+
+.registration-logo:hover {
+    transform: scale(1.03);
 }
 
 .registration-header h2 {
-    margin: 0 0 4px;
+    margin: 0 0 7px;
     color: #24324a;
     font-size: clamp(1.25rem, 3vw, 1.65rem);
     font-weight: 800;
@@ -480,16 +486,22 @@ select.form-control {
 
 @media (max-width: 480px) {
     .registration-header {
-        align-items: flex-start;
+        align-items: center;
+        padding-top: 24px;
     }
 
     .registration-logo {
-        width: 46px;
-        height: 46px;
-        flex-basis: 46px;
+        width: min(210px, 82%);
+        height: auto;
     }
 
     .registration-card {
         border-radius: 14px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .registration-logo {
+        transition: none;
     }
 }

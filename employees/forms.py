@@ -50,11 +50,10 @@ class LeaveApprovalForm(forms.ModelForm):
 class LeaveTypeForm(forms.ModelForm):
     class Meta:
         model = LeaveType
-        fields = ['name', 'yearly_limit', 'description']
+        fields = ['name', 'yearly_limit']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'name': forms.Select(attrs={'class': 'form-select'}),
             'yearly_limit': forms.NumberInput(attrs={'class': 'form-control'}),
-            'description': forms.Textarea(attrs={'rows': 2, 'class': 'form-control'}),
         }
 
 class EmployeeRegistrationForm(forms.ModelForm):

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | Leave Management System</title>
+    <title>Sign in | LeaveBox</title>
     <link rel="stylesheet" href="{% static 'css/bootstrap-5.3.2.min.css' %}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,19 +13,15 @@
 </head>
 <body>
     <div class="login-page">
-        <div class="login-panel">
-            <div class="login-illustration">
-                <h3>Welcome back</h3>
-                <p>Sign in to manage leave requests, attendance, departments and reports. 
-                Secure access for admins and HR managers.</p>
-                <!-- Decorative / illustrative area, could include an SVG or image -->
-            </div>
-
+        <span class="login-shape login-shape--one" aria-hidden="true"></span>
+        <span class="login-shape login-shape--two" aria-hidden="true"></span>
+        <main class="login-panel">
             <div class="login-card">
                 <div class="login-brand">
-                    <img src="{% static 'assets/images/logos/logo.webp' %}" alt="Logo" class="login-logo">
-                    <h2>Leave Management System</h2>
-                    <p>Admin portal</p>
+                    <img src="{% static 'images/leavebox-logo.png' %}" alt="LeaveBox — your easy leave solution" class="login-logo">
+                    <span class="login-brand-divider" aria-hidden="true"></span>
+                    <h1>Welcome Back</h1>
+                    <p>Your Easy Leave Solution</p>
                 </div>
 
                 {% if messages %}
@@ -38,13 +34,13 @@
 
                 <form method="post" class="login-form">
                     {% csrf_token %}
-                    <div class="mb-3 ">
+                    <div class="login-field">
                         <label for="username" class="form-label">Username</label>
-                        <input type="text" class="form-control" id="username" name="username" placeholder="Enter your username" required>
+                        <input type="text" class="form-control" id="username" name="username" value="{{ request.POST.username|default:'' }}" placeholder="Enter your username" autocomplete="username" required autofocus>
                     </div>
-                    <div class="mb-3">
+                    <div class="login-field">
                         <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" autocomplete="current-password" required>
                     </div>
 
                     <div class="form-actions">
@@ -55,7 +51,7 @@
                         <a href="#">Forgot password?</a>
                     </div>
 
-                    <div style="margin-top:16px">
+                    <div class="login-submit-wrap">
                         <button type="submit" class="btn btn-primary btn-login">Sign In</button>
                     </div>
                 </form>
@@ -64,7 +60,7 @@
                     <p>New to the system? <a href="{% url 'accounts:register' %}">Create an account</a></p>
                 </div>
             </div>
-        </div>
+        </main>
     </div>
 </body>
 </html>

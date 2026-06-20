@@ -122,6 +122,42 @@ class Employee(models.Model):
         related_name='subordinates'
     )
     is_active = models.BooleanField(default=True)
+    custom_leave = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text=(
+            "Admin-defined total leave balance for this employee. If set, "
+            "leave type balances will be ignored."
+        ),
+    )
+
+    def get_leave_summary(self, year=None):
+        """Return the effective allowance, usage, and remaining balance."""
+        approved_leaves = self.leave_requests.filter(status='APPROVED')
+        if self.custom_leave is not None:
+            used_days = approved_leaves.aggregate(
+                total=Sum('total_days'),
+            )['total'] or 0
+            return {
+                'allowance': self.custom_leave,
+                'used': used_days,
+                'balance': self.custom_leave,
+                'uses_custom_leave': True,
+            }
+
+        year = year or timezone.localdate().year
+        used_days = approved_leaves.filter(from_date__year=year).aggregate(
+            total=Sum('total_days'),
+        )['total'] or 0
+        allowance = LeaveType.objects.aggregate(
+            total=Sum('yearly_limit'),
+        )['total'] or 0
+        return {
+            'allowance': allowance,
+            'used': used_days,
+            'balance': max(allowance - used_days, 0),
+            'uses_custom_leave': False,
+        }
 
     @classmethod
     def _next_employee_id(cls):
@@ -238,13 +274,27 @@ class EmpProfile(models.Model):
         return f"Profile - {self.employee}"
 
 class LeaveType(models.Model):
-    name = models.CharField(max_length=100, unique=True)
+    CASUAL = 'Casual Leave'
+    SICK = 'Sick Leave'
+    EARNED = 'Earned Leave'
+    OTHER = 'Other'
+
+    LEAVE_TYPE_CHOICES = [
+        (CASUAL, 'Casual Leave'),
+        (SICK, 'Sick Leave'),
+        (EARNED, 'Earned Leave'),
+        (OTHER, 'Other'),
+    ]
+
+    name = models.CharField(
+        max_length=50,
+        choices=LEAVE_TYPE_CHOICES,
+        default=CASUAL,
+    )
     yearly_limit = models.PositiveIntegerField(
         default=0,
         help_text="Maximum days allowed per year for this leave type"
     )
-    description = models.TextField(blank=True, null=True)
-
     def __str__(self):
         return self.name
 
@@ -312,17 +362,60 @@ class LeaveRequest(models.Model):
             if overlapping.exists():
                 raise ValidationError("You have an overlapping leave request for these dates.")
 
-            # Check leave balance for the current year
-            current_year = timezone.now().year
-            used_days = LeaveRequest.objects.filter(
-                employee=self.employee,
-                leave_type=self.leave_type,
-                status='APPROVED',
-                from_date__year=current_year
-            ).aggregate(Sum('total_days'))['total_days__sum'] or 0
+            if self.employee.custom_leave is not None:
+                if self.total_days > self.employee.custom_leave:
+                    raise ValidationError(
+                        "Insufficient custom leave balance. You have "
+                        f"{self.employee.custom_leave} days remaining."
+                    )
+            else:
+                # Check leave type balance for the current year.
+                current_year = timezone.now().year
+                used_days = LeaveRequest.objects.filter(
+                    employee=self.employee,
+                    leave_type=self.leave_type,
+                    status='APPROVED',
+                    from_date__year=current_year
+                ).aggregate(Sum('total_days'))['total_days__sum'] or 0
 
-            if used_days + self.total_days > self.leave_type.yearly_limit:
-                raise ValidationError(f"Insufficient balance. You have {self.leave_type.yearly_limit - used_days} days remaining for {self.leave_type.name}.")
+                if used_days + self.total_days > self.leave_type.yearly_limit:
+                    raise ValidationError(f"Insufficient balance. You have {self.leave_type.yearly_limit - used_days} days remaining for {self.leave_type.name}.")
+
+    def approve(self, approved_by=None, remarks=''):
+        """Approve this request and atomically consume any custom balance."""
+        if not self.pk:
+            raise ValidationError('The leave request must be saved before approval.')
+
+        with transaction.atomic():
+            leave = LeaveRequest.objects.select_for_update().get(pk=self.pk)
+            if leave.status != 'PENDING':
+                raise ValidationError('Only pending leave requests can be approved.')
+
+            employee = Employee.objects.select_for_update().get(
+                pk=leave.employee_id,
+            )
+            if employee.custom_leave is not None:
+                if leave.total_days > employee.custom_leave:
+                    raise ValidationError(
+                        "Insufficient custom leave balance. The employee has "
+                        f"{employee.custom_leave} days remaining."
+                    )
+                employee.custom_leave -= leave.total_days
+                employee.save(update_fields=['custom_leave'])
+
+            leave.status = 'APPROVED'
+            leave.remarks = remarks
+            leave.approved_by = approved_by
+            leave.approved_at = timezone.now()
+            leave.save(update_fields=[
+                'status',
+                'remarks',
+                'approved_by',
+                'approved_at',
+            ])
+
+        self.refresh_from_db()
+        return self
 
     def __str__(self):
         return f"{self.employee} - {self.leave_type} ({self.from_date} to {self.to_date})"
