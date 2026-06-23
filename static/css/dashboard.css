@@ -1223,6 +1223,39 @@ body {
     width:210px;
 }
 
+.dashboard-table.dashboard-table--attendance {
+    width:80%;
+    min-width:760px;
+    margin:0 auto;
+}
+
+.dashboard-table--attendance .col-employee {
+    width:190px;
+}
+
+.dashboard-table--attendance .col-designation {
+    width:130px;
+}
+
+.dashboard-table--attendance .col-department {
+    width:120px;
+}
+
+.dashboard-table--attendance .col-time {
+    width:92px;
+    text-align:center;
+}
+
+.dashboard-table--attendance .col-status {
+    width:122px;
+    text-align:center;
+}
+
+.dashboard-table--attendance .col-action {
+    width:74px;
+    text-align:center;
+}
+
 .dashboard-table--history {
     min-width:760px;
 }
@@ -1347,6 +1380,30 @@ body {
 
 .table-section .col-action .text-muted {
     white-space:nowrap;
+}
+
+.dashboard-profile-view-button {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:36px;
+    height:36px;
+    padding:0;
+    border:1px solid #c7d2fe;
+    border-radius:9px;
+    color:#4338ca;
+    background:#eef2ff;
+    font-size:0.78rem;
+    transition:color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.dashboard-profile-view-button:hover,
+.dashboard-profile-view-button:focus-visible {
+    border-color:#6366f1;
+    color:#fff;
+    background:#4f46e5;
+    box-shadow:0 8px 16px rgba(79,70,229,0.2);
+    transform:translateY(-1px);
 }
 
 /* ====================================

@@ -129,83 +129,82 @@
             </div>
         </div> -->
 
-        <!-- Leave Request Table -->
-        <div class="table-section" id="leave-requests">
+        <!-- Employee Attendance Table -->
+        <div class="table-section" id="employee-attendance">
             <div class="table-actions">
                 <div>
-                    <h5>Recent Leave Requests</h5>
-                    <p class="text-muted mb-0">Review the latest submissions and approvals.</p>
+                    <h5>Employee Attendance</h5>
+                    <p class="text-muted mb-0">Track today's check-ins, check-outs, and attendance status.</p>
                 </div>
-                <!-- <div class="d-flex gap-2 flex-wrap">
-                    <button class="btn btn-outline-secondary btn-sm">Filter</button>
-                    <a href="#" class="btn btn-primary btn-sm">View All</a>
-                </div> -->
+                <div class="text-end">
+                    <small class="text-muted d-block">Today</small>
+                    <h6 class="mb-0">{{ today|date:"l, d M Y" }}</h6>
+                </div>
             </div>
 
-            <div class="table-responsive dashboard-table-wrap" tabindex="0" aria-label="Recent leave requests table">
-                <table class="table dashboard-table">
+            <div class="table-responsive dashboard-table-wrap" tabindex="0" aria-label="Employee attendance table">
+                <table class="table dashboard-table dashboard-table--attendance">
                     <thead>
                         <tr>
-                            <th scope="col" class="col-employee">Employee</th>
-                            <th scope="col" class="col-department">Dept.</th>
-                            <th scope="col" class="col-type">Leave Type</th>
-                            <th scope="col" class="col-date">From</th>
-                            <th scope="col" class="col-date">To</th>
-                            <th scope="col" class="col-days text-center">Days</th>
-                            <th scope="col" class="col-reason">Reason</th>
-                            <th scope="col" class="col-applied">Applied on</th>
-                            <th scope="col" class="col-status">Status</th>
-                            <th scope="col" class="col-action text-end">Action</th>
+                            <th scope="col" class="col-employee">Name with Employee ID</th>
+                            <th scope="col" class="col-designation">Designation</th>
+                            <th scope="col" class="col-department">Department</th>
+                            <th scope="col" class="col-time">Check In</th>
+                            <th scope="col" class="col-time">Check Out</th>
+                            <th scope="col" class="col-status">Attendance Status</th>
+                            <th scope="col" class="col-action text-center">View Profile</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for leave in recent_requests %}
+                        {% for employee in employee_attendance %}
                         <tr>
                             <th scope="row" class="col-employee">
                                 <div class="leave-employee-cell">
-                                    <span class="leave-employee-name text-truncate" title="{{ leave.employee.user.get_full_name|default:leave.employee.user.username }} ({{ leave.employee.employee_id }})">
-                                        {{ leave.employee.user.get_full_name|default:leave.employee.user.username }} ({{ leave.employee.employee_id }})
+                                    <span class="leave-employee-name text-truncate" title="{{ employee.user.get_full_name|default:employee.user.username }} ({{ employee.employee_id }})">
+                                        {{ employee.user.get_full_name|default:employee.user.username }} ({{ employee.employee_id }})
                                     </span>
                                 </div>
                             </th>
-                             {% if leave.employee.department %}
-                            <td class="col-department fw-semibold text-truncate" title="{{ leave.employee.department }}">{{ leave.employee.department }}</td>
+                            <td class="col-designation text-truncate" title="{{ employee.designation|default:'Employee' }}">{{ employee.designation|default:"Employee" }}</td>
+                            {% if employee.department %}
+                                <td class="col-department fw-semibold text-truncate" title="{{ employee.department }}">{{ employee.department }}</td>
                             {% else %}
-                            <td class="col-department text-muted">-</td>
+                                <td class="col-department text-muted">-</td>
                             {% endif %}
-                            <td class="col-type text-truncate" title="{{ leave.leave_type }}">{{ leave.leave_type }}</td>
-                            <td class="col-date">{{ leave.from_date|date:"d M Y" }}</td>
-                            <td class="col-date">{{ leave.to_date|date:"d M Y" }}</td>
-                            <td class="col-days text-center fw-bold">{{ leave.total_days }}</td>
-                            <td class="leave-reason-cell" title="{{ leave.reason }}">{{ leave.reason|truncatechars:55 }}</td>
-                            <td class="col-applied">{{ leave.applied_at|date:"d M Y, h:i A" }}</td>
+                            <td class="col-time">
+                                {% if employee.today_check_in %}
+                                    {{ employee.today_check_in|time:"g:i A" }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="col-time">
+                                {% if employee.today_check_out %}
+                                    {{ employee.today_check_out|time:"g:i A" }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
                             <td class="col-status">
-                                <span class="status-pill {% if leave.status == 'PENDING' %}pending{% elif leave.status == 'APPROVED' %}approved{% elif leave.status == 'REJECTED' %}rejected{% else %}cancelled{% endif %}">
-                                    {{ leave.get_status_display }}
+                                <span class="status-pill {% if employee.today_check_in %}approved{% else %}rejected{% endif %}">
+                                    {% if employee.today_check_in %}Present{% else %}Absent{% endif %}
                                 </span>
                             </td>
-                            <td class="col-action text-end">
-                                {% if leave.status == 'PENDING' %}
-                                    <div class="d-flex gap-2 justify-content-end flex-nowrap action-btns">
-                                        <form method="post" action="{% url 'leave_approve' leave.pk %}">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-success btn-sm" aria-label="Approve leave request for {{ leave.employee.user.get_full_name|default:leave.employee.user.username }}">Approve</button>
-                                        </form>
-                                        <form method="post" action="{% url 'leave_reject' leave.pk %}">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-danger btn-sm" aria-label="Reject leave request for {{ leave.employee.user.get_full_name|default:leave.employee.user.username }}">Reject</button>
-                                        </form>
-                                    </div>
-                                {% else %}
-                                    <span class="text-muted">Reviewed</span>
-                                {% endif %}
+                            <td class="col-action text-center">
+                                <a
+                                    href="{% url 'employee_detail' employee.pk %}"
+                                    class="btn dashboard-profile-view-button"
+                                    aria-label="View profile for {{ employee.user.get_full_name|default:employee.user.username }}"
+                                    title="View profile">
+                                    <i class="fa-solid fa-user" aria-hidden="true"></i>
+                                </a>
                             </td>
                         </tr>
                         {% empty %}
                         <tr class="leave-empty-row">
-                            <td colspan="10" class="text-center py-5">
-                                <i class="fas fa-inbox text-muted me-2" aria-hidden="true"></i>
-                                No leave requests found.
+                            <td colspan="7" class="text-center py-5">
+                                <i class="fas fa-user-slash text-muted me-2" aria-hidden="true"></i>
+                                No employees found.
                             </td>
                         </tr>
                         {% endfor %}

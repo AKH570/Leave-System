@@ -94,6 +94,8 @@
                         <th scope="col">Supervisor</th>
                         <th scope="col">Leave Balance</th>
                         <th scope="col">Status</th>
+                        <th scope="col">Attendance Status</th>
+                        <th scope="col">Login Time</th>
                         <th scope="col" class="employee-view-column">View Profile</th>
                     </tr>
                 </thead>
@@ -147,6 +149,19 @@
                                 {% if employee.is_active %}Active{% else %}Inactive{% endif %}
                             </span>
                         </td>
+                        <td>
+                            <span class="employee-status {% if employee.today_login_time %}employee-status--active{% else %}employee-status--inactive{% endif %}">
+                                <span aria-hidden="true"></span>
+                                {% if employee.today_login_time %}Present{% else %}Absent{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            {% if employee.today_login_time %}
+                                {{ employee.today_login_time|time:"g:i A" }}
+                            {% else %}
+                                <span class="employee-muted">Not logged in</span>
+                            {% endif %}
+                        </td>
                         <td class="employee-view-column">
                             <a
                                 href="{% url 'employee_detail' employee.pk %}"
@@ -159,7 +174,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7">
+                        <td colspan="9">
                             <div class="employee-empty-state">
                                 <i class="fas fa-user-slash" aria-hidden="true"></i>
                                 <h3>No employees found</h3>
@@ -168,6 +183,88 @@
                                     <a href="{% url 'employee_list' %}" class="btn btn-primary btn-sm">View all employees</a>
                                 {% endif %}
                             </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="table-section" id="leave-requests">
+        <div class="table-actions">
+            <div>
+                <h5>Recent Leave Requests</h5>
+                <p class="text-muted mb-0">Review the latest submissions and approvals.</p>
+            </div>
+        </div>
+
+        <div class="table-responsive dashboard-table-wrap" tabindex="0" aria-label="Recent leave requests table">
+            <table class="table dashboard-table">
+                <thead>
+                    <tr>
+                        <th scope="col" class="col-employee">Employee</th>
+                        <th scope="col" class="col-department">Dept.</th>
+                        <th scope="col" class="col-type">Leave Type</th>
+                        <th scope="col" class="col-date">From</th>
+                        <th scope="col" class="col-date">To</th>
+                        <th scope="col" class="col-days text-center">Days</th>
+                        <th scope="col" class="col-reason">Reason</th>
+                        <th scope="col" class="col-applied">Applied on</th>
+                        <th scope="col" class="col-status">Status</th>
+                        <th scope="col" class="col-action text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for leave in recent_requests %}
+                    <tr>
+                        <th scope="row" class="col-employee">
+                            <div class="leave-employee-cell">
+                                <span class="leave-employee-name text-truncate" title="{{ leave.employee.user.get_full_name|default:leave.employee.user.username }} ({{ leave.employee.employee_id }})">
+                                    {{ leave.employee.user.get_full_name|default:leave.employee.user.username }} ({{ leave.employee.employee_id }})
+                                </span>
+                            </div>
+                        </th>
+                        {% if leave.employee.department %}
+                            <td class="col-department fw-semibold text-truncate" title="{{ leave.employee.department }}">{{ leave.employee.department }}</td>
+                        {% else %}
+                            <td class="col-department text-muted">-</td>
+                        {% endif %}
+                        <td class="col-type text-truncate" title="{{ leave.leave_type }}">{{ leave.leave_type }}</td>
+                        <td class="col-date">{{ leave.from_date|date:"d M Y" }}</td>
+                        <td class="col-date">{{ leave.to_date|date:"d M Y" }}</td>
+                        <td class="col-days text-center fw-bold">{{ leave.total_days }}</td>
+                        <td class="leave-reason-cell" title="{{ leave.reason }}">{{ leave.reason|truncatechars:55 }}</td>
+                        <td class="col-applied">{{ leave.applied_at|date:"d M Y, h:i A" }}</td>
+                        <td class="col-status">
+                            <span class="status-pill {% if leave.status == 'PENDING' %}pending{% elif leave.status == 'APPROVED' %}approved{% elif leave.status == 'REJECTED' %}rejected{% else %}cancelled{% endif %}">
+                                {{ leave.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="col-action text-end">
+                            {% if leave.status == 'PENDING' %}
+                                <div class="d-flex gap-2 justify-content-end flex-nowrap action-btns">
+                                    <form method="post" action="{% url 'leave_approve' leave.pk %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ request.get_full_path }}#leave-requests">
+                                        <button type="submit" class="btn btn-success btn-sm" aria-label="Approve leave request for {{ leave.employee.user.get_full_name|default:leave.employee.user.username }}">Approve</button>
+                                    </form>
+                                    <form method="post" action="{% url 'leave_reject' leave.pk %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ request.get_full_path }}#leave-requests">
+                                        <button type="submit" class="btn btn-danger btn-sm" aria-label="Reject leave request for {{ leave.employee.user.get_full_name|default:leave.employee.user.username }}">Reject</button>
+                                    </form>
+                                </div>
+                            {% else %}
+                                <span class="text-muted">Reviewed</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr class="leave-empty-row">
+                        <td colspan="10" class="text-center py-5">
+                            <i class="fas fa-inbox text-muted me-2" aria-hidden="true"></i>
+                            No leave requests found.
                         </td>
                     </tr>
                     {% endfor %}

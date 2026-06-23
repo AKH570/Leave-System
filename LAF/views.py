@@ -1,7 +1,9 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
+from django.db.models import OuterRef, Subquery
 from django.utils import timezone
 from employees.models import Employee, LeaveRequest
+from attendances.models import Attendance
 
 @login_required
 def dashboard(request):
@@ -11,14 +13,23 @@ def dashboard(request):
     if is_admin:
         # Admin/HR Stats
         now = timezone.now()
+        today = timezone.localdate()
         current_month_requests = LeaveRequest.objects.filter(
             applied_at__month=now.month,
             applied_at__year=now.year
         )
-        recent_requests = (
-            LeaveRequest.objects
-            .select_related('employee__user', 'employee__department', 'leave_type')
-            .order_by('-applied_at')[:10]
+        today_attendance = Attendance.objects.filter(
+            employee=OuterRef('pk'),
+            date=today,
+        )
+        employee_attendance = (
+            Employee.objects
+            .select_related('user', 'department', 'designation')
+            .annotate(
+                today_check_in=Subquery(today_attendance.values('check_in')[:1]),
+                today_check_out=Subquery(today_attendance.values('check_out')[:1]),
+            )
+            .order_by('employee_id')
         )
 
         context = {
@@ -26,7 +37,7 @@ def dashboard(request):
             'pending_requests_count': LeaveRequest.objects.filter(status='PENDING').count(),
             'approved_this_month': current_month_requests.filter(status='APPROVED').count(),
             'rejected_this_month': current_month_requests.filter(status='REJECTED').count(),
-            'recent_requests': recent_requests,
+            'employee_attendance': employee_attendance,
             'today': now,
         }
         return render(request, 'dashboard/admin_dashboard.html', context)

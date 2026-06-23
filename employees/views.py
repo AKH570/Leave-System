@@ -1,16 +1,18 @@
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
-from django.db.models import Q, Sum
+from django.db.models import OuterRef, Q, Subquery, Sum
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, TemplateView
 from .models import EmpProfile, Employee, LeaveRequest, LeaveType
+from attendances.models import Attendance
 from .forms import (
     EmpProfileForm,
     LeaveRequestForm,
@@ -18,6 +20,17 @@ from .forms import (
     LeaveTypeForm,
     ProfilePictureForm,
 )
+
+
+def get_safe_redirect_url(request, fallback='dashboard'):
+    redirect_to = request.POST.get('next') or request.GET.get('next')
+    if redirect_to and url_has_allowed_host_and_scheme(
+        redirect_to,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return redirect_to
+    return fallback
 
 class AdminAccessMixin(UserPassesTestMixin):
     """Ensures only Admin/HR can access certain views."""
@@ -241,10 +254,11 @@ def leave_approve(request, pk):
         return redirect('dashboard')
     
     leave = get_object_or_404(LeaveRequest, pk=pk)
+    redirect_to = get_safe_redirect_url(request)
     if request.method == 'POST':
         if leave.status != 'PENDING':
             messages.error(request, "Only pending leave requests can be approved.")
-            return redirect('dashboard')
+            return redirect(redirect_to)
 
         remarks = request.POST.get('remarks', '')
         try:
@@ -257,7 +271,7 @@ def leave_approve(request, pk):
             messages.error(request, '; '.join(error.messages))
         else:
             messages.success(request, f"Leave request for {leave.employee} approved.")
-    return redirect('dashboard')
+    return redirect(redirect_to)
 
 def leave_reject(request, pk):
     """Admin action to reject a request."""
@@ -265,10 +279,11 @@ def leave_reject(request, pk):
         return redirect('dashboard')
     
     leave = get_object_or_404(LeaveRequest, pk=pk)
+    redirect_to = get_safe_redirect_url(request)
     if request.method == 'POST':
         if leave.status != 'PENDING':
             messages.error(request, "Only pending leave requests can be rejected.")
-            return redirect('dashboard')
+            return redirect(redirect_to)
 
         remarks = request.POST.get('remarks', '')
         leave.status = 'REJECTED'
@@ -280,7 +295,7 @@ def leave_reject(request, pk):
         leave.approved_at = timezone.now()
         leave.save()
         messages.warning(request, f"Leave request for {leave.employee} rejected.")
-    return redirect('dashboard')
+    return redirect(redirect_to)
 
 # --- Management Views ---
 
@@ -307,12 +322,20 @@ class EmployeeListView(LoginRequiredMixin, AdminAccessMixin, ListView):
     context_object_name = 'employees'
 
     def get_queryset(self):
+        today = timezone.localdate()
+        today_login = Attendance.objects.filter(
+            employee=OuterRef('pk'),
+            date=today,
+            check_in__isnull=False,
+        ).order_by('check_in')
+
         queryset = Employee.objects.select_related(
             'user',
             'department',
             'designation',
             'supervisor__user',
         ).annotate(
+            today_login_time=Subquery(today_login.values('check_in')[:1]),
             used_leave_days=Coalesce(
                 Sum(
                     'leave_requests__total_days',
@@ -362,6 +385,11 @@ class EmployeeListView(LoginRequiredMixin, AdminAccessMixin, ListView):
             'inactive_employees': all_employees.filter(is_active=False).count(),
             'department_count': all_employees.exclude(department=None)
                 .values('department').distinct().count(),
+            'recent_requests': LeaveRequest.objects.select_related(
+                'employee__user',
+                'employee__department',
+                'leave_type',
+            ).order_by('-applied_at')[:10],
             'search_query': self.request.GET.get('q', '').strip(),
             'selected_status': self.request.GET.get('status', '').strip(),
         })

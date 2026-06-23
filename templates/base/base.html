@@ -142,7 +142,7 @@
                             </div>
 
                             {% if user.is_staff or user.is_superuser or user.role == 'ADMIN' %}
-                                <a class="dashboard-notification-footer" href="{% url 'dashboard' %}#leave-requests">View All Requests <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+                                <a class="dashboard-notification-footer" href="{% url 'employee_list' %}#leave-requests">View All Requests <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
                             {% else %}
                                 <a class="dashboard-notification-footer" href="{% url 'leave_history' %}">View All Requests <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
                             {% endif %}
