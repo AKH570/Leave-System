@@ -1,0 +1,73 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/setup.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="setup-page">
+    <header class="setup-header">
+        <div>
+            <span class="setup-eyebrow">Employee setup</span>
+            <h1>Designations</h1>
+            <p>Maintain job titles and connect them to departments.</p>
+        </div>
+        <a href="{% url 'designation_add' %}" class="btn btn-primary setup-add-button">
+            <i class="fas fa-plus" aria-hidden="true"></i>
+            Add Designation
+        </a>
+    </header>
+
+    <section class="setup-card">
+        <div class="setup-card-header">
+            <div>
+                <h2>Designation List</h2>
+                <p>{{ designations|length }} designation{{ designations|length|pluralize }}</p>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table setup-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Designation</th>
+                        <th>Department</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for designation in designations %}
+                        <tr>
+                            <td><span class="setup-code">{{ designation.designation_id }}</span></td>
+                            <td>
+                                <strong>{{ designation.designation_name }}</strong>
+                                {% if designation.description %}<small>{{ designation.description|truncatechars:80 }}</small>{% endif %}
+                            </td>
+                            <td>{{ designation.department|default:"-" }}</td>
+                            <td>
+                                <span class="setup-status {% if designation.status == 'ACTIVE' %}setup-status--active{% else %}setup-status--inactive{% endif %}">
+                                    {{ designation.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="text-end setup-actions">
+                                <a href="{% url 'designation_edit' designation.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-pen" aria-hidden="true"></i> Edit
+                                </a>
+                                <a href="{% url 'designation_delete' designation.pk %}" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash" aria-hidden="true"></i> Delete
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="setup-empty">No designations configured yet.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

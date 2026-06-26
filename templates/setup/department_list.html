@@ -1,0 +1,72 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/setup.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="setup-page">
+    <header class="setup-header">
+        <div>
+            <span class="setup-eyebrow">Employee setup</span>
+            <h1>Departments</h1>
+            <p>Manage departments used across employee profiles, approvals, and reports.</p>
+        </div>
+        <a href="{% url 'department_add' %}" class="btn btn-primary setup-add-button">
+            <i class="fas fa-plus" aria-hidden="true"></i>
+            Add Department
+        </a>
+    </header>
+
+    <section class="setup-card">
+        <div class="setup-card-header">
+            <div>
+                <h2>Department List</h2>
+                <p>{{ departments|length }} department{{ departments|length|pluralize }}</p>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table setup-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Department</th>
+                        <th>Manager</th>
+                        <th>Description</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for department in departments %}
+                        <tr>
+                            <td><span class="setup-code">{{ department.code }}</span></td>
+                            <td><strong>{{ department.get_name_display|default:department.name }}</strong></td>
+                            <td>
+                                {% if department.manager %}
+                                    {{ department.manager.user.get_full_name|default:department.manager.user.username }}
+                                {% else %}
+                                    <span class="text-muted">Not assigned</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ department.description|default:"-"|truncatechars:70 }}</td>
+                            <td class="text-end setup-actions">
+                                <a href="{% url 'department_edit' department.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-pen" aria-hidden="true"></i> Edit
+                                </a>
+                                <a href="{% url 'department_delete' department.pk %}" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash" aria-hidden="true"></i> Delete
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="setup-empty">No departments configured yet.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

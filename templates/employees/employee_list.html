@@ -91,12 +91,12 @@
                         <th scope="col">Name</th>
                         <th scope="col">Department</th>
                         <th scope="col">Designation</th>
-                        <th scope="col">Supervisor</th>
+                        <!-- <th scope="col">Supervisor</th> -->
                         <th scope="col">Leave Balance</th>
                         <th scope="col">Status</th>
-                        <th scope="col">Attendance Status</th>
-                        <th scope="col">Login Time</th>
-                        <th scope="col" class="employee-view-column">View Profile</th>
+                        <!-- <th scope="col">Attendance Status</th> -->
+                        <!-- <th scope="col">Login Time</th> -->
+                        <th scope="col" class="employee-view-column">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -124,13 +124,7 @@
                             {% endif %}
                         </td>
                         <td>{{ employee.designation|default:"Employee" }}</td>
-                        <td>
-                            {% if employee.supervisor %}
-                                {{ employee.supervisor.user.get_full_name|default:employee.supervisor.user.username }}
-                            {% else %}
-                                <span class="employee-muted">Not assigned</span>
-                            {% endif %}
-                        </td>
+                        
                         <td>
                             <span class="employee-balance">
                                 <strong>{{ employee.leave_balance }} day{{ employee.leave_balance|pluralize }}</strong>
@@ -149,27 +143,23 @@
                                 {% if employee.is_active %}Active{% else %}Inactive{% endif %}
                             </span>
                         </td>
-                        <td>
-                            <span class="employee-status {% if employee.today_login_time %}employee-status--active{% else %}employee-status--inactive{% endif %}">
-                                <span aria-hidden="true"></span>
-                                {% if employee.today_login_time %}Present{% else %}Absent{% endif %}
-                            </span>
-                        </td>
-                        <td>
-                            {% if employee.today_login_time %}
-                                {{ employee.today_login_time|time:"g:i A" }}
-                            {% else %}
-                                <span class="employee-muted">Not logged in</span>
-                            {% endif %}
-                        </td>
                         <td class="employee-view-column">
-                            <a
-                                href="{% url 'employee_detail' employee.pk %}"
-                                class="btn employee-view-button"
-                                aria-label="View profile for {{ employee.user.get_full_name|default:employee.user.username }}"
-                                title="View profile">
-                                <i class="fa-solid fa-user" aria-hidden="true"></i>
-                            </a>
+                            <div class="employee-action-group">
+                                <!-- <a
+                                    href="{% url 'employee_detail' employee.pk %}"
+                                    class="btn employee-icon-button"
+                                    aria-label="View profile for {{ employee.user.get_full_name|default:employee.user.username }}"
+                                    title="View profile">
+                                    <i class="fa-solid fa-user" aria-hidden="true"></i>
+                                </a> -->
+                                <a
+                                    href="{% url 'employee_admin_edit' employee.pk %}"
+                                    class="btn employee-icon-button employee-icon-button--edit"
+                                    aria-label="Edit employee setup for {{ employee.user.get_full_name|default:employee.user.username }}"
+                                    title="Edit employee">
+                                    <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     {% empty %}

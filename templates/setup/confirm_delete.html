@@ -1,0 +1,28 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/setup.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="setup-form-page">
+    <section class="setup-form-card setup-delete-card">
+        <header class="setup-form-header">
+            <span><i class="fas fa-triangle-exclamation" aria-hidden="true"></i></span>
+            <div>
+                <p>Confirm delete</p>
+                <h1>{{ setup_title|default:"Delete Record" }}</h1>
+            </div>
+        </header>
+        <form method="post" class="setup-form">
+            {% csrf_token %}
+            <p class="setup-delete-copy">Are you sure you want to delete <strong>{{ object }}</strong>?</p>
+            <div class="setup-form-actions">
+                <a href="{{ cancel_url }}" class="btn btn-outline-secondary">Cancel</a>
+                <button type="submit" class="btn btn-danger">Delete</button>
+            </div>
+        </form>
+    </section>
+</div>
+{% endblock %}

@@ -6,14 +6,26 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db.models import OuterRef, Q, Subquery, Sum
+from django.db.models.deletion import ProtectedError
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, TemplateView
-from .models import EmpProfile, Employee, LeaveRequest, LeaveType
+from django.views.generic import (
+    CreateView,
+    DeleteView,
+    DetailView,
+    ListView,
+    TemplateView,
+    UpdateView,
+)
+from departments.models import Department
+from .models import EmpDesignation, EmpProfile, Employee, LeaveRequest, LeaveType
 from attendances.models import Attendance
 from .forms import (
+    DepartmentForm,
+    EmpDesignationForm,
+    EmployeeAdminUpdateForm,
     EmpProfileForm,
     LeaveRequestForm,
     LeaveApprovalForm,
@@ -36,8 +48,16 @@ class AdminAccessMixin(UserPassesTestMixin):
     """Ensures only Admin/HR can access certain views."""
     def test_func(self):
         return self.request.user.is_authenticated and (
-            self.request.user.is_staff or getattr(self.request.user, 'role', '') == 'ADMIN'
+            self.request.user.is_superuser
+            or self.request.user.is_staff
+            or getattr(self.request.user, 'role', '') == 'ADMIN'
         )
+
+    def handle_no_permission(self):
+        if self.request.user.is_authenticated:
+            messages.error(self.request, 'You do not have permission to access HR settings.')
+            return redirect('dashboard')
+        return super().handle_no_permission()
 
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'dashboard/employee_dashboard.html'
@@ -310,11 +330,135 @@ class LeaveTypeCreateView(LoginRequiredMixin, AdminAccessMixin, CreateView):
     template_name = 'leaves/leave_type_form.html'
     success_url = reverse_lazy('leave_type_list')
 
+    def form_valid(self, form):
+        messages.success(self.request, 'Leave setting created successfully.')
+        return super().form_valid(form)
+
 class LeaveTypeUpdateView(LoginRequiredMixin, AdminAccessMixin, UpdateView):
     model = LeaveType
     form_class = LeaveTypeForm
     template_name = 'leaves/leave_type_form.html'
     success_url = reverse_lazy('leave_type_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Leave setting updated successfully.')
+        return super().form_valid(form)
+
+class LeaveTypeDeleteView(LoginRequiredMixin, AdminAccessMixin, DeleteView):
+    model = LeaveType
+    template_name = 'setup/confirm_delete.html'
+    success_url = reverse_lazy('leave_type_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'setup_title': 'Delete Leave Setting',
+            'cancel_url': reverse_lazy('leave_type_list'),
+        })
+        return context
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Leave setting deleted successfully.')
+        return super().form_valid(form)
+
+class DepartmentListView(LoginRequiredMixin, AdminAccessMixin, ListView):
+    model = Department
+    template_name = 'setup/department_list.html'
+    context_object_name = 'departments'
+
+    def get_queryset(self):
+        return Department.objects.select_related('manager__user').order_by('name')
+
+class DepartmentCreateView(LoginRequiredMixin, AdminAccessMixin, CreateView):
+    model = Department
+    form_class = DepartmentForm
+    template_name = 'setup/department_form.html'
+    success_url = reverse_lazy('department_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Department created successfully.')
+        return super().form_valid(form)
+
+class DepartmentUpdateView(LoginRequiredMixin, AdminAccessMixin, UpdateView):
+    model = Department
+    form_class = DepartmentForm
+    template_name = 'setup/department_form.html'
+    success_url = reverse_lazy('department_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Department updated successfully.')
+        return super().form_valid(form)
+
+class DepartmentDeleteView(LoginRequiredMixin, AdminAccessMixin, DeleteView):
+    model = Department
+    template_name = 'setup/confirm_delete.html'
+    success_url = reverse_lazy('department_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'setup_title': 'Delete Department',
+            'cancel_url': reverse_lazy('department_list'),
+        })
+        return context
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Department deleted successfully.')
+        return super().form_valid(form)
+
+class DesignationListView(LoginRequiredMixin, AdminAccessMixin, ListView):
+    model = EmpDesignation
+    template_name = 'setup/designation_list.html'
+    context_object_name = 'designations'
+
+    def get_queryset(self):
+        return EmpDesignation.objects.select_related('department', 'created_by').order_by('designation_name')
+
+class DesignationCreateView(LoginRequiredMixin, AdminAccessMixin, CreateView):
+    model = EmpDesignation
+    form_class = EmpDesignationForm
+    template_name = 'setup/designation_form.html'
+    success_url = reverse_lazy('designation_list')
+
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        messages.success(self.request, 'Designation created successfully.')
+        return super().form_valid(form)
+
+class DesignationUpdateView(LoginRequiredMixin, AdminAccessMixin, UpdateView):
+    model = EmpDesignation
+    form_class = EmpDesignationForm
+    template_name = 'setup/designation_form.html'
+    success_url = reverse_lazy('designation_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Designation updated successfully.')
+        return super().form_valid(form)
+
+class DesignationDeleteView(LoginRequiredMixin, AdminAccessMixin, DeleteView):
+    model = EmpDesignation
+    template_name = 'setup/confirm_delete.html'
+    success_url = reverse_lazy('designation_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'setup_title': 'Delete Designation',
+            'cancel_url': reverse_lazy('designation_list'),
+        })
+        return context
+
+    def form_valid(self, form):
+        try:
+            response = super().form_valid(form)
+        except ProtectedError:
+            messages.error(
+                self.request,
+                'This designation is assigned to employees or registrations and cannot be deleted.',
+            )
+            return redirect(self.success_url)
+        messages.success(self.request, 'Designation deleted successfully.')
+        return response
 
 class EmployeeListView(LoginRequiredMixin, AdminAccessMixin, ListView):
     model = Employee
@@ -394,3 +538,16 @@ class EmployeeListView(LoginRequiredMixin, AdminAccessMixin, ListView):
             'selected_status': self.request.GET.get('status', '').strip(),
         })
         return context
+
+class EmployeeAdminUpdateView(LoginRequiredMixin, AdminAccessMixin, UpdateView):
+    model = Employee
+    form_class = EmployeeAdminUpdateForm
+    template_name = 'employees/admin_employee_form.html'
+    success_url = reverse_lazy('employee_list')
+
+    def get_queryset(self):
+        return Employee.objects.select_related('user', 'department', 'designation')
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Employee setup updated successfully.')
+        return super().form_valid(form)

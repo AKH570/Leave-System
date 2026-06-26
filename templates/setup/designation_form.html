@@ -1,0 +1,40 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/setup.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="setup-form-page">
+    <a href="{% url 'designation_list' %}" class="setup-back-link">
+        <i class="fas fa-arrow-left" aria-hidden="true"></i>
+        Back to Designations
+    </a>
+    <section class="setup-form-card">
+        <header class="setup-form-header">
+            <span><i class="fas fa-id-card" aria-hidden="true"></i></span>
+            <div>
+                <p>Employee setup</p>
+                <h1>{% if object %}Edit Designation{% else %}Add Designation{% endif %}</h1>
+            </div>
+        </header>
+        <form method="post" class="setup-form" novalidate>
+            {% csrf_token %}
+            {% include 'setup/form_errors.html' %}
+            {% for field in form %}
+                <div class="setup-field">
+                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                    {% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                </div>
+            {% endfor %}
+            <div class="setup-form-actions">
+                <a href="{% url 'designation_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">Save Designation</button>
+            </div>
+        </form>
+    </section>
+</div>
+{% endblock %}

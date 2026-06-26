@@ -2,6 +2,7 @@ from django import forms
 from django.db import models
 from .models import EmpDesignation, EmpProfile, LeaveRequest, LeaveType, Employee
 from accounts.models import Registration
+from departments.models import Department
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -55,6 +56,59 @@ class LeaveTypeForm(forms.ModelForm):
             'name': forms.Select(attrs={'class': 'form-select'}),
             'yearly_limit': forms.NumberInput(attrs={'class': 'form-control'}),
         }
+
+
+class DepartmentForm(forms.ModelForm):
+    class Meta:
+        model = Department
+        fields = ['name', 'code', 'description', 'manager']
+        widgets = {
+            'name': forms.Select(attrs={'class': 'form-select'}),
+            'code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. HR'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'manager': forms.Select(attrs={'class': 'form-select'}),
+        }
+
+
+class EmpDesignationForm(forms.ModelForm):
+    class Meta:
+        model = EmpDesignation
+        fields = ['designation_name', 'department', 'description', 'status']
+        widgets = {
+            'designation_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. HR Officer'}),
+            'department': forms.Select(attrs={'class': 'form-select'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
+        }
+
+
+class EmployeeAdminUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Employee
+        fields = ['department', 'designation', 'is_active', 'custom_leave']
+        labels = {
+            'is_active': 'Status',
+            'custom_leave': 'Custom leave entitlement',
+        }
+        help_texts = {
+            'custom_leave': 'Leave blank to use leave type yearly limits.',
+        }
+        widgets = {
+            'department': forms.Select(attrs={'class': 'form-select'}),
+            'designation': forms.Select(attrs={'class': 'form-select'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'custom_leave': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'placeholder': 'Use default'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        active_designations = EmpDesignation.objects.filter(status=EmpDesignation.Status.ACTIVE)
+        if self.instance and self.instance.designation_id:
+            active_designations = EmpDesignation.objects.filter(
+                models.Q(status=EmpDesignation.Status.ACTIVE)
+                | models.Q(pk=self.instance.designation_id),
+            )
+        self.fields['designation'].queryset = active_designations.distinct()
 
 class EmployeeRegistrationForm(forms.ModelForm):
     """Form for the Registration staging model mentioned in text.txt"""

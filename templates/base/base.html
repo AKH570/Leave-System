@@ -39,25 +39,49 @@
                     Dashboard
                 </a>
             </li>
-             {% if user.is_staff or user.role == 'ADMIN' %}
+             {% if user.is_superuser or user.is_staff or user.role == 'ADMIN' %}
             <li>
                 <a href="{% url 'employee_list' %}">
                     <i class="fas fa-users" role="img" aria-label="Employees"></i>
                     Employees
                 </a>
             </li>
-            <li>
-                <a href="{% url 'leave_type_list' %}">
-                    <i class="fas fa-calendar-check"></i>
-                    Leave Types
-                </a>
+            {% with current_url=request.resolver_match.url_name %}
+            <li class="sidebar-menu-group{% if current_url == 'department_list' or current_url == 'department_add' or current_url == 'department_edit' or current_url == 'department_delete' or current_url == 'designation_list' or current_url == 'designation_add' or current_url == 'designation_edit' or current_url == 'designation_delete' or current_url == 'leave_type_list' or current_url == 'leave_type_add' or current_url == 'leave_type_edit' or current_url == 'leave_type_delete' %} is-open{% endif %}">
+                <button
+                    type="button"
+                    class="sidebar-menu-toggle"
+                    aria-expanded="{% if current_url == 'department_list' or current_url == 'department_add' or current_url == 'department_edit' or current_url == 'department_delete' or current_url == 'designation_list' or current_url == 'designation_add' or current_url == 'designation_edit' or current_url == 'designation_delete' or current_url == 'leave_type_list' or current_url == 'leave_type_add' or current_url == 'leave_type_edit' or current_url == 'leave_type_delete' %}true{% else %}false{% endif %}"
+                    aria-controls="settingsSubmenu"
+                >
+                    <span>
+                        <i class="fa-solid fa-gear" aria-hidden="true"></i>
+                        Settings
+                    </span>
+                    <i class="fas fa-chevron-down sidebar-menu-chevron" aria-hidden="true"></i>
+                </button>
+                <ul class="sidebar-submenu" id="settingsSubmenu">
+                    <li>
+                        <a href="{% url 'department_list' %}" class="{% if current_url == 'department_list' or current_url == 'department_add' or current_url == 'department_edit' or current_url == 'department_delete' %}active{% endif %}">
+                            <i class="fas fa-building"></i>
+                            Departments
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'designation_list' %}" class="{% if current_url == 'designation_list' or current_url == 'designation_add' or current_url == 'designation_edit' or current_url == 'designation_delete' %}active{% endif %}">
+                            <i class="fas fa-id-card"></i>
+                            Designations
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'leave_type_list' %}" class="{% if current_url == 'leave_type_list' or current_url == 'leave_type_add' or current_url == 'leave_type_edit' or current_url == 'leave_type_delete' %}active{% endif %}">
+                            <i class="fas fa-calendar-check"></i>
+                            Leave Settings
+                        </a>
+                    </li>
+                </ul>
             </li>
-            <li>
-                <a href="{% url 'leave_type_list' %}">
-                    <i class="fas fa-list"></i>
-                    Leave Settings
-                </a>
-            </li>
+            {% endwith %}
             {% else %}
 
             <li>
@@ -239,6 +263,16 @@
     <script src="{% static 'js/dashboard.js' %}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            const settingsGroup = document.querySelector('.sidebar-menu-group');
+            const settingsToggle = settingsGroup ? settingsGroup.querySelector('.sidebar-menu-toggle') : null;
+
+            if (settingsGroup && settingsToggle) {
+                settingsToggle.addEventListener('click', function () {
+                    const isOpen = settingsGroup.classList.toggle('is-open');
+                    settingsToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                });
+            }
+
             const notificationTrigger = document.getElementById('notificationDropdown');
             const notificationMenu = document.getElementById('notificationMenu');
 

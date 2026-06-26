@@ -57,6 +57,9 @@
                                 <a href="{% url 'leave_type_edit' leave_type.pk %}" class="btn btn-sm btn-outline-primary">
                                     <i class="fas fa-pen" aria-hidden="true"></i> Edit
                                 </a>
+                                <a href="{% url 'leave_type_delete' leave_type.pk %}" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash" aria-hidden="true"></i> Delete
+                                </a>
                             </td>
                         </tr>
                     {% empty %}
