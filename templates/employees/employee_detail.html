@@ -81,6 +81,47 @@
         </article>
     </section>
 
+    <section class="employee-detail-card employee-profile-card">
+        <div class="employee-detail-card-heading">
+            <i class="fas fa-briefcase" aria-hidden="true"></i>
+            <div>
+                <h2>Extended profile</h2>
+                <p>Identification, service, education, and role details</p>
+            </div>
+        </div>
+        <dl class="employee-detail-list employee-detail-list--profile">
+            <div><dt>Identification No</dt><dd>{{ profile.identification_no|default:"Not provided" }}</dd></div>
+            <div><dt>Service Length</dt><dd>{{ employee.service_length }}</dd></div>
+            <div><dt>Present Address</dt><dd>{{ profile.present_address|default:"Not provided"|linebreaksbr }}</dd></div>
+            <div><dt>Permanent Address</dt><dd>{{ profile.permanent_address|default:"Not provided"|linebreaksbr }}</dd></div>
+            <div class="employee-detail-list-wide"><dt>Education</dt><dd>{{ profile.education|default:"Not provided"|linebreaksbr }}</dd></div>
+            <div class="employee-detail-list-wide"><dt>Job Description</dt><dd>{{ profile.job_description|default:"Not provided"|linebreaksbr }}</dd></div>
+        </dl>
+    </section>
+
+    <section class="employee-detail-card employee-profile-card">
+        <div class="employee-detail-card-heading">
+            <i class="fas fa-money-check-dollar" aria-hidden="true"></i>
+            <div>
+                <h2>Salary information</h2>
+                <p>Latest active salary and increment details</p>
+            </div>
+        </div>
+        {% if latest_salary %}
+            <dl class="employee-detail-list employee-detail-list--salary">
+                <div><dt>Basic Salary</dt><dd>{{ latest_salary.basic_salary|floatformat:2 }}</dd></div>
+                <div><dt>Net Salary</dt><dd>{{ latest_salary.net_salary|floatformat:2 }}</dd></div>
+                <div><dt>Increment Amount</dt><dd>{{ latest_salary.increment_amount|default_if_none:"0.00"|floatformat:2 }}</dd></div>
+                <div><dt>Increment Date</dt><dd>{{ latest_salary.increment_date|date:"d F Y"|default:"Not provided" }}</dd></div>
+            </dl>
+        {% else %}
+            <div class="employee-detail-empty-state">
+                <i class="fas fa-circle-info" aria-hidden="true"></i>
+                <span>No salary information available.</span>
+            </div>
+        {% endif %}
+    </section>
+
     <section class="employee-detail-card employee-leave-card">
         <div class="employee-detail-card-heading">
             <i class="fas fa-calendar-alt" aria-hidden="true"></i>

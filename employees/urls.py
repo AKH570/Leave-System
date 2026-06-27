@@ -26,5 +26,7 @@ urlpatterns = [
     path('setup/designations/<int:pk>/delete/', views.DesignationDeleteView.as_view(), name='designation_delete'),
     path('employees/', views.EmployeeListView.as_view(), name='employee_list'),
     path('employees/<int:pk>/', views.EmployeeDetailView.as_view(), name='employee_detail'),
-    path('employees/<int:pk>/edit/', views.EmployeeAdminUpdateView.as_view(), name='employee_admin_edit'),
+    path('employees/<int:pk>/edit/', views.employee_admin_edit, name='employee_admin_edit'),
+    path('employees/<int:pk>/update/', views.employee_admin_update, name='employee_admin_update'),
+    path('employees/departments/quick-create/', views.department_quick_create, name='department_quick_create'),
 ]

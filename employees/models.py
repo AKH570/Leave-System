@@ -1,9 +1,16 @@
 import re
+import calendar
 import uuid
+from datetime import datetime
+from decimal import Decimal
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.core.validators import FileExtensionValidator, RegexValidator
+from django.core.validators import (
+    FileExtensionValidator,
+    MinValueValidator,
+    RegexValidator,
+)
 from django.db import IntegrityError, models, transaction
 from django.db.models import Sum
 from django.db.models.functions import Lower
@@ -159,6 +166,64 @@ class Employee(models.Model):
             'uses_custom_leave': False,
         }
 
+    @property
+    def service_length(self):
+        """Return service duration calculated from joining date to today."""
+        start_date = self.joining_date
+        if isinstance(start_date, datetime):
+            start_date = start_date.date()
+        today = timezone.localdate()
+        if start_date > today:
+            return 'Not started'
+
+        def add_years(value, years):
+            target_year = value.year + years
+            target_day = min(
+                value.day,
+                calendar.monthrange(target_year, value.month)[1],
+            )
+            return value.replace(year=target_year, day=target_day)
+
+        def add_months(value, months):
+            month_index = value.month - 1 + months
+            target_year = value.year + month_index // 12
+            target_month = month_index % 12 + 1
+            target_day = min(
+                value.day,
+                calendar.monthrange(target_year, target_month)[1],
+            )
+            return value.replace(
+                year=target_year,
+                month=target_month,
+                day=target_day,
+            )
+
+        years = today.year - start_date.year
+        year_anniversary = add_years(start_date, years)
+        if year_anniversary > today:
+            years -= 1
+            year_anniversary = add_years(start_date, years)
+
+        months = (
+            (today.year - year_anniversary.year) * 12
+            + today.month
+            - year_anniversary.month
+        )
+        month_anniversary = add_months(year_anniversary, months)
+        if month_anniversary > today:
+            months -= 1
+            month_anniversary = add_months(year_anniversary, months)
+
+        days = (today - month_anniversary).days
+        parts = []
+        if years:
+            parts.append(f'{years} year{"s" if years != 1 else ""}')
+        if months:
+            parts.append(f'{months} month{"s" if months != 1 else ""}')
+        if days or not parts:
+            parts.append(f'{days} day{"s" if days != 1 else ""}')
+        return ' '.join(parts)
+
     @classmethod
     def _next_employee_id(cls):
         latest_ids = cls.objects.order_by('-pk').values_list(
@@ -218,7 +283,7 @@ class EmpProfile(models.Model):
         related_name='extended_profile',
     )
     identification_no = models.CharField(
-        'Identification number',
+        'Identification No',
         max_length=100,
         blank=True,
         validators=[
@@ -249,6 +314,7 @@ class EmpProfile(models.Model):
     nationality = models.CharField(max_length=80, blank=True)
     present_address = models.TextField(blank=True)
     permanent_address = models.TextField(blank=True)
+    education = models.TextField()
     emergency_contact_number = models.CharField(
         max_length=15,
         blank=True,
@@ -261,7 +327,7 @@ class EmpProfile(models.Model):
     )
     emergency_contact_name = models.CharField(max_length=120, blank=True)
     emergency_contact_relationship = models.CharField(max_length=80, blank=True)
-    bio = models.TextField(blank=True)
+    job_description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -272,6 +338,207 @@ class EmpProfile(models.Model):
 
     def __str__(self):
         return f"Profile - {self.employee}"
+
+
+class EmpSalary(models.Model):
+    """Effective-dated salary structure for an employee."""
+
+    class PaymentMethod(models.TextChoices):
+        BANK_TRANSFER = 'BANK_TRANSFER', 'Bank Transfer'
+        CASH = 'CASH', 'Cash'
+        BKASH = 'BKASH', 'bKash'
+        NAGAD = 'NAGAD', 'Nagad'
+        ROCKET = 'ROCKET', 'Rocket'
+
+    employee = models.ForeignKey(
+        Employee,
+        on_delete=models.CASCADE,
+        related_name='salary_records',
+    )
+    basic_salary = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+    )
+    house_rent = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+    )
+    medical_allowance = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+    )
+    transport_allowance = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+    )
+    food_allowance = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+    )
+    mobile_allowance = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+    )
+    other_allowance = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+    )
+    gross_salary = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        editable=False,
+    )
+    provident_fund = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+    )
+    loan_deduction = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+    )
+    advance_salary = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+    )
+    other_deduction = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+    )
+    increment_amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(Decimal('0.00'))],
+    )
+    increment_date = models.DateField(null=True, blank=True)
+    net_salary = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        editable=False,
+    )
+    bank_name = models.CharField(max_length=100, blank=True)
+    bank_account_no = models.CharField(max_length=50, blank=True)
+    branch_name = models.CharField(max_length=100, blank=True)
+    payment_method = models.CharField(
+        max_length=20,
+        choices=PaymentMethod.choices,
+        default=PaymentMethod.BANK_TRANSFER,
+    )
+    mobile_banking_name = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True,
+    )
+    mobile_banking_no = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+    )
+    salary_effective_from = models.DateField()
+    salary_end_date = models.DateField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    remarks = models.TextField(blank=True)
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='updated_salary_records',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Employee Salary'
+        verbose_name_plural = 'Employee Salaries'
+        ordering = ['-salary_effective_from']
+        indexes = [
+            models.Index(fields=['employee'], name='emp_sal_employee_idx'),
+            models.Index(
+                fields=['salary_effective_from'],
+                name='emp_sal_effective_idx',
+            ),
+            models.Index(fields=['is_active'], name='emp_sal_active_idx'),
+        ]
+
+    @staticmethod
+    def _money(value):
+        return Decimal(str(value or 0)).quantize(Decimal('0.01'))
+
+    def calculate_totals(self):
+        """Calculate gross and net salary from earnings and deductions."""
+        self.gross_salary = sum((
+            self._money(self.basic_salary),
+            self._money(self.house_rent),
+            self._money(self.medical_allowance),
+            self._money(self.transport_allowance),
+            self._money(self.food_allowance),
+            self._money(self.mobile_allowance),
+            self._money(self.other_allowance),
+        ), Decimal('0.00'))
+        total_deductions = sum((
+            self._money(self.provident_fund),
+            self._money(self.loan_deduction),
+            self._money(self.advance_salary),
+            self._money(self.other_deduction),
+        ), Decimal('0.00'))
+        self.net_salary = self.gross_salary - total_deductions
+        return self.gross_salary, self.net_salary
+
+    def clean(self):
+        super().clean()
+        if (
+            self.salary_effective_from
+            and self.salary_end_date
+            and self.salary_end_date < self.salary_effective_from
+        ):
+            raise ValidationError({
+                'salary_end_date': (
+                    'Salary end date cannot be before the effective date.'
+                ),
+            })
+
+    def save(self, *args, **kwargs):
+        self.calculate_totals()
+        if kwargs.get('update_fields') is not None:
+            kwargs['update_fields'] = set(kwargs['update_fields']) | {
+                'gross_salary',
+                'net_salary',
+            }
+        return super().save(*args, **kwargs)
+
+    def __str__(self):
+        full_name = (
+            self.employee.user.get_full_name()
+            or self.employee.user.username
+        )
+        return f'{self.employee.employee_id} - {full_name}'
 
 class LeaveType(models.Model):
     CASUAL = 'Casual Leave'

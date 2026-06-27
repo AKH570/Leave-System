@@ -3,12 +3,14 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError
 from django.db.models import OuterRef, Q, Subquery, Sum
 from django.db.models.deletion import ProtectedError
 from django.db.models.functions import Coalesce
 from django.utils import timezone
+from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import (
@@ -25,12 +27,14 @@ from attendances.models import Attendance
 from .forms import (
     DepartmentForm,
     EmpDesignationForm,
+    EmployeeAdminEditForm,
     EmployeeAdminUpdateForm,
     EmpProfileForm,
     LeaveRequestForm,
     LeaveApprovalForm,
     LeaveTypeForm,
     ProfilePictureForm,
+    QuickDepartmentForm,
 )
 
 
@@ -229,13 +233,18 @@ class EmployeeDetailView(LoginRequiredMixin, AdminAccessMixin, DetailView):
             'department',
             'designation',
             'supervisor__user',
+            'extended_profile',
         )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         employee = self.object
+        profile = getattr(employee, 'extended_profile', None)
         current_year = timezone.now().year
         leave_summary = employee.get_leave_summary(current_year)
+        latest_salary = employee.salary_records.filter(
+            is_active=True,
+        ).order_by('-salary_effective_from', '-pk').first()
 
         context.update({
             'yearly_leave_allowance': leave_summary['allowance'],
@@ -243,6 +252,8 @@ class EmployeeDetailView(LoginRequiredMixin, AdminAccessMixin, DetailView):
             'leave_balance': leave_summary['balance'],
             'uses_custom_leave': leave_summary['uses_custom_leave'],
             'current_year': current_year,
+            'profile': profile,
+            'latest_salary': latest_salary,
             'recent_leaves': employee.leave_requests.select_related(
                 'leave_type',
             ).order_by('-applied_at')[:5],
@@ -539,15 +550,118 @@ class EmployeeListView(LoginRequiredMixin, AdminAccessMixin, ListView):
         })
         return context
 
-class EmployeeAdminUpdateView(LoginRequiredMixin, AdminAccessMixin, UpdateView):
-    model = Employee
-    form_class = EmployeeAdminUpdateForm
-    template_name = 'employees/admin_employee_form.html'
-    success_url = reverse_lazy('employee_list')
+def _is_admin_user(user):
+    return user.is_authenticated and (
+        user.is_superuser
+        or user.is_staff
+        or getattr(user, 'role', '') == 'ADMIN'
+    )
 
-    def get_queryset(self):
-        return Employee.objects.select_related('user', 'department', 'designation')
 
-    def form_valid(self, form):
-        messages.success(self.request, 'Employee setup updated successfully.')
-        return super().form_valid(form)
+def _employee_for_admin_edit(pk):
+    return get_object_or_404(
+        Employee.objects.select_related(
+            'user', 'department', 'designation', 'extended_profile',
+        ),
+        pk=pk,
+    )
+
+
+def _add_employee_list_values(employee):
+    summary = employee.get_leave_summary(timezone.now().year)
+    employee.yearly_leave_allowance = summary['allowance']
+    employee.used_leave_days = summary['used']
+    employee.leave_balance = summary['balance']
+    employee.uses_custom_leave = summary['uses_custom_leave']
+    return employee
+
+
+@login_required
+@user_passes_test(_is_admin_user)
+def employee_admin_edit(request, pk):
+    """Return a pre-populated employee edit form for the Bootstrap modal."""
+    employee = _employee_for_admin_edit(pk)
+    form = EmployeeAdminEditForm(employee=employee)
+    html = render_to_string(
+        'employees/partials/employee_edit_form.html',
+        {'form': form, 'employee': employee},
+        request=request,
+    )
+    return JsonResponse({'ok': True, 'html': html})
+
+
+@require_POST
+@login_required
+@user_passes_test(_is_admin_user)
+def employee_admin_update(request, pk):
+    """Validate and save an employee edit, returning modal/row HTML as JSON."""
+    employee = _employee_for_admin_edit(pk)
+    form = EmployeeAdminEditForm(
+        request.POST,
+        request.FILES,
+        employee=employee,
+    )
+    if not form.is_valid():
+        html = render_to_string(
+            'employees/partials/employee_edit_form.html',
+            {'form': form, 'employee': employee},
+            request=request,
+        )
+        return JsonResponse({'ok': False, 'html': html}, status=422)
+
+    employee = form.save()
+    employee = Employee.objects.select_related(
+        'user', 'department', 'designation',
+    ).get(pk=employee.pk)
+    _add_employee_list_values(employee)
+    row_html = render_to_string(
+        'employees/partials/employee_row.html',
+        {'employee': employee},
+        request=request,
+    )
+    all_employees = Employee.objects.all()
+    return JsonResponse({
+        'ok': True,
+        'message': 'Employee information updated successfully.',
+        'row_html': row_html,
+        'stats': {
+            'total': all_employees.count(),
+            'active': all_employees.filter(is_active=True).count(),
+            'inactive': all_employees.filter(is_active=False).count(),
+        },
+    })
+
+
+@require_POST
+@login_required
+@user_passes_test(_is_admin_user)
+def department_quick_create(request):
+    """Create a department from an employee modal without leaving the page."""
+    form = QuickDepartmentForm(request.POST)
+    if not form.is_valid():
+        return JsonResponse({
+            'ok': False,
+            'errors': {
+                name: [str(error) for error in errors]
+                for name, errors in form.errors.items()
+            },
+        }, status=422)
+
+    try:
+        department = form.save()
+    except IntegrityError:
+        return JsonResponse({
+            'ok': False,
+            'errors': {
+                'name': ['A department with this name already exists.'],
+            },
+        }, status=409)
+
+    return JsonResponse({
+        'ok': True,
+        'department': {
+            'id': department.pk,
+            'name': department.name,
+        },
+        'message': f'{department.name} was added successfully.',
+    }, status=201)

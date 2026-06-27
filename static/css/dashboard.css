@@ -485,6 +485,8 @@ body {
 }
 
 .dashboard-profile-trigger {
+    position:relative;
+    z-index:1;
     display:flex;
     align-items:center;
     gap:10px;
@@ -494,6 +496,7 @@ body {
     border-radius:13px;
     color:#172033;
     background:transparent;
+    cursor:pointer;
     transition:background-color 0.18s ease, box-shadow 0.18s ease;
 }
 

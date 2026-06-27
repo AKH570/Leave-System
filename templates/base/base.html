@@ -176,7 +176,7 @@
                         <div class="dashboard-avatar-control">
                             <a class="dashboard-avatar-link" href="{% url 'employee_profile_edit' %}" aria-label="Manage profile picture">
                                 <span class="dashboard-avatar-wrap">
-                                    <img src="{{ current_profile_picture_url }}" alt="{{ user.get_full_name|default:user.username }} profile picture" class="dashboard-avatar js-profile-avatar">
+                                    <img src="{{ current_profile_picture_url|default:default_avatar_url }}" alt="{{ user.get_full_name|default:user.username }} profile picture" class="dashboard-avatar js-profile-avatar" onerror="this.onerror=null;this.src='{{ default_avatar_url }}';">
                                     <span class="dashboard-avatar-status" aria-label="Online"></span>
                                 </span>
                             </a>
@@ -184,7 +184,7 @@
                                 <i class="fas fa-camera" aria-hidden="true"></i>
                             </button>
                         </div>
-                        <button class="dashboard-profile-trigger" type="button" id="userDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                        <button class="dashboard-profile-trigger" type="button" id="userDropdown" aria-haspopup="true" aria-controls="userDropdownMenu" aria-expanded="false">
                             <span class="dashboard-profile-copy">
                                 <strong>{{ user.get_full_name|default:user.username }}</strong>
                                 <small>
@@ -200,7 +200,7 @@
                             <i class="fas fa-chevron-down dashboard-profile-chevron" aria-hidden="true"></i>
                         </button>
 
-                        <ul class="dropdown-menu dropdown-menu-end dashboard-profile-menu" aria-labelledby="userDropdown">
+                        <ul class="dropdown-menu dropdown-menu-end dashboard-profile-menu" id="userDropdownMenu" aria-labelledby="userDropdown">
                             <li class="dashboard-profile-menu-header">
                                 <img src="{{ current_profile_picture_url }}" alt="" class="dashboard-avatar dashboard-avatar--menu js-profile-avatar">
                                 <span>
@@ -261,6 +261,7 @@
 
     <!-- Dashboard JS -->
     <script src="{% static 'js/dashboard.js' %}"></script>
+    {% block extra_js %}{% endblock %}
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const settingsGroup = document.querySelector('.sidebar-menu-group');
@@ -302,12 +303,14 @@
             }
 
             const trigger = document.getElementById('userDropdown');
-            const menu = trigger ? trigger.nextElementSibling : null;
+            const menu = document.getElementById('userDropdownMenu');
 
             if (trigger && menu) {
                 trigger.addEventListener('click', function (event) {
+                    event.preventDefault();
                     event.stopPropagation();
-                    const isOpen = menu.classList.toggle('show');
+                    const isOpen = !menu.classList.contains('show');
+                    menu.classList.toggle('show', isOpen);
                     trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
                 });
 

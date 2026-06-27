@@ -1,5 +1,7 @@
 from django import forms
 from django.db import models
+from django.db import transaction
+from django.utils.text import slugify
 from .models import EmpDesignation, EmpProfile, LeaveRequest, LeaveType, Employee
 from accounts.models import Registration
 from departments.models import Department
@@ -63,11 +65,40 @@ class DepartmentForm(forms.ModelForm):
         model = Department
         fields = ['name', 'code', 'description', 'manager']
         widgets = {
-            'name': forms.Select(attrs={'class': 'form-select'}),
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Human Resources'}),
             'code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. HR'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'manager': forms.Select(attrs={'class': 'form-select'}),
         }
+
+
+class QuickDepartmentForm(forms.Form):
+    name = forms.CharField(
+        label='Department Name',
+        max_length=100,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'e.g. Human Resources',
+            'autocomplete': 'off',
+        }),
+    )
+
+    def clean_name(self):
+        name = ' '.join(self.cleaned_data['name'].split()).upper()
+        if Department.objects.filter(name__iexact=name).exists():
+            raise forms.ValidationError('A department with this name already exists.')
+        return name
+
+    def save(self):
+        name = self.cleaned_data['name']
+        base_code = (slugify(name).upper() or 'DEPARTMENT')[:20]
+        code = base_code
+        suffix = 2
+        while Department.objects.filter(code__iexact=code).exists():
+            suffix_text = f'-{suffix}'
+            code = f'{base_code[:20 - len(suffix_text)]}{suffix_text}'
+            suffix += 1
+        return Department.objects.create(name=name, code=code)
 
 
 class EmpDesignationForm(forms.ModelForm):
@@ -109,6 +140,86 @@ class EmployeeAdminUpdateForm(forms.ModelForm):
                 | models.Q(pk=self.instance.designation_id),
             )
         self.fields['designation'].queryset = active_designations.distinct()
+
+
+class EmployeeAdminEditForm(forms.Form):
+    """Update only the employment settings controlled by an administrator."""
+
+    department = forms.ModelChoiceField(
+        queryset=Department.objects.none(),
+        required=False,
+        empty_label='Select department',
+    )
+    designation = forms.ModelChoiceField(
+        queryset=EmpDesignation.objects.none(),
+        required=False,
+        empty_label='Select designation',
+    )
+    role = forms.ChoiceField(choices=(('ADMIN', 'Admin'), ('EMPLOYEE', 'Employee')))
+    employment_status = forms.ChoiceField(
+        label='Employment Status',
+        choices=(('active', 'Active'), ('inactive', 'Inactive')),
+    )
+    joining_date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
+    leave_balance = forms.IntegerField(
+        label='Leave Balance',
+        required=False,
+        min_value=0,
+        help_text='Leave blank to use the standard leave-type allowances.',
+    )
+
+    def __init__(self, *args, employee, **kwargs):
+        self.employee = employee
+        self.user = employee.user
+        try:
+            self.profile = employee.extended_profile
+        except EmpProfile.DoesNotExist:
+            self.profile = None
+
+        initial = kwargs.setdefault('initial', {})
+        initial.update({
+            'department': employee.department_id,
+            'designation': employee.designation_id,
+            'role': self.user.role,
+            'employment_status': 'active' if employee.is_active else 'inactive',
+            'joining_date': employee.joining_date,
+            'leave_balance': employee.custom_leave,
+        })
+        super().__init__(*args, **kwargs)
+
+        self.fields['department'].queryset = Department.objects.all()
+        designations = EmpDesignation.objects.filter(status=EmpDesignation.Status.ACTIVE)
+        if employee.designation_id:
+            designations = EmpDesignation.objects.filter(
+                models.Q(status=EmpDesignation.Status.ACTIVE)
+                | models.Q(pk=employee.designation_id),
+            )
+        self.fields['designation'].queryset = designations.distinct()
+
+        for field in self.fields.values():
+            css_class = 'form-select' if isinstance(field.widget, forms.Select) else 'form-control'
+            field.widget.attrs['class'] = css_class
+        if self.is_bound:
+            for name, field in self.fields.items():
+                if self.errors.get(name):
+                    field.widget.attrs['class'] += ' is-invalid'
+
+    @transaction.atomic
+    def save(self):
+        self.user.role = self.cleaned_data['role']
+        self.user.save(update_fields=['role'])
+
+        self.employee.department = self.cleaned_data['department']
+        self.employee.designation = self.cleaned_data['designation']
+        self.employee.is_active = self.cleaned_data['employment_status'] == 'active'
+        self.employee.joining_date = self.cleaned_data['joining_date']
+        self.employee.custom_leave = self.cleaned_data['leave_balance']
+        self.employee.save(update_fields=[
+            'department', 'designation', 'is_active', 'joining_date', 'custom_leave',
+        ])
+
+        return self.employee
+
 
 class EmployeeRegistrationForm(forms.ModelForm):
     """Form for the Registration staging model mentioned in text.txt"""
@@ -183,10 +294,11 @@ class EmpProfileForm(forms.ModelForm):
             'nationality',
             'present_address',
             'permanent_address',
+            'education',
             'emergency_contact_name',
             'emergency_contact_relationship',
             'emergency_contact_number',
-            'bio',
+            'job_description',
         ]
         help_texts = {
             'profile_picture': 'Upload a JPG, PNG, or WebP image up to 5 MB.',
@@ -207,13 +319,14 @@ class EmpProfileForm(forms.ModelForm):
             'nationality': forms.TextInput(attrs={'class': 'form-control'}),
             'present_address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'permanent_address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'education': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'emergency_contact_name': forms.TextInput(attrs={'class': 'form-control'}),
             'emergency_contact_relationship': forms.TextInput(attrs={'class': 'form-control'}),
             'emergency_contact_number': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'e.g. +880 1700 000000',
             }),
-            'bio': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'job_description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
         }
 
     def clean_profile_picture(self):

@@ -22,21 +22,21 @@
         <article class="employee-stat-card employee-stat-card--total">
             <span class="employee-stat-icon"><i class="fas fa-id-badge"></i></span>
             <div>
-                <strong>{{ total_employees }}</strong>
+                <strong data-employee-stat="total">{{ total_employees }}</strong>
                 <span>Total employees</span>
             </div>
         </article>
         <article class="employee-stat-card employee-stat-card--active">
             <span class="employee-stat-icon"><i class="fas fa-user-check"></i></span>
             <div>
-                <strong>{{ active_employees }}</strong>
+                <strong data-employee-stat="active">{{ active_employees }}</strong>
                 <span>Active employees</span>
             </div>
         </article>
         <article class="employee-stat-card employee-stat-card--inactive">
             <span class="employee-stat-icon"><i class="fas fa-user-clock"></i></span>
             <div>
-                <strong>{{ inactive_employees }}</strong>
+                <strong data-employee-stat="inactive">{{ inactive_employees }}</strong>
                 <span>Inactive employees</span>
             </div>
         </article>
@@ -101,67 +101,7 @@
                 </thead>
                 <tbody>
                     {% for employee in employees %}
-                    <tr>
-                        <th scope="row">
-                            <div class="employee-identity">
-                                <span class="employee-avatar" aria-hidden="true">
-                                    {{ employee.user.first_name|first|default:employee.user.username|first|upper }}
-                                </span>
-                                <span class="employee-identity-copy">
-                                    <span class="employee-name-line">
-                                        <strong>{{ employee.user.get_full_name|default:employee.user.username }}</strong>
-                                        <span> ({{ employee.employee_id }})</span>
-                                    </span>
-                                    <small>{{ employee.user.email|default:"No email provided" }}</small>
-                                </span>
-                            </div>
-                        </th>
-                        <td>
-                            {% if employee.department %}
-                                {{ employee.department }}
-                            {% else %}
-                                <span class="employee-muted">Not assigned</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ employee.designation|default:"Employee" }}</td>
-                        
-                        <td>
-                            <span class="employee-balance">
-                                <strong>{{ employee.leave_balance }} day{{ employee.leave_balance|pluralize }}</strong>
-                                <small>
-                                    {% if employee.uses_custom_leave %}
-                                        Custom balance; {{ employee.used_leave_days }} approved day{{ employee.used_leave_days|pluralize }} recorded
-                                    {% else %}
-                                        {{ employee.used_leave_days }} used of {{ employee.yearly_leave_allowance }}
-                                    {% endif %}
-                                </small>
-                            </span>
-                        </td>
-                        <td>
-                            <span class="employee-status {% if employee.is_active %}employee-status--active{% else %}employee-status--inactive{% endif %}">
-                                <span aria-hidden="true"></span>
-                                {% if employee.is_active %}Active{% else %}Inactive{% endif %}
-                            </span>
-                        </td>
-                        <td class="employee-view-column">
-                            <div class="employee-action-group">
-                                <!-- <a
-                                    href="{% url 'employee_detail' employee.pk %}"
-                                    class="btn employee-icon-button"
-                                    aria-label="View profile for {{ employee.user.get_full_name|default:employee.user.username }}"
-                                    title="View profile">
-                                    <i class="fa-solid fa-user" aria-hidden="true"></i>
-                                </a> -->
-                                <a
-                                    href="{% url 'employee_admin_edit' employee.pk %}"
-                                    class="btn employee-icon-button employee-icon-button--edit"
-                                    aria-label="Edit employee setup for {{ employee.user.get_full_name|default:employee.user.username }}"
-                                    title="Edit employee">
-                                    <i class="fa-solid fa-pen" aria-hidden="true"></i>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
+                        {% include 'employees/partials/employee_row.html' %}
                     {% empty %}
                     <tr>
                         <td colspan="9">
@@ -262,5 +202,39 @@
             </table>
         </div>
     </section>
+
+    <div class="modal fade employee-edit-modal" id="employeeEditModal" tabindex="-1" aria-labelledby="employeeEditModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <span class="employee-modal-eyebrow">Employee management</span>
+                        <h2 class="modal-title" id="employeeEditModalLabel">Edit Employee</h2>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="employeeEditModalBody">
+                    <div class="employee-modal-loading" role="status">
+                        <span class="spinner-border text-primary" aria-hidden="true"></span>
+                        <span>Loading employee information...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container position-fixed top-0 end-0 p-3 employee-toast-container">
+        <div id="employeeSuccessToast" class="toast border-0" role="status" aria-live="polite" aria-atomic="true">
+            <div class="toast-body">
+                <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                <span id="employeeSuccessMessage">Employee updated successfully.</span>
+                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/employee_edit_modal.js' %}"></script>
 {% endblock %}

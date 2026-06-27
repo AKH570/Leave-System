@@ -142,6 +142,10 @@
     box-shadow: 0 14px 32px rgba(15, 23, 42, .06);
 }
 
+.employee-profile-card {
+    margin-bottom: 18px;
+}
+
 .employee-detail-card-heading {
     display: flex;
     align-items: center;
@@ -202,6 +206,27 @@
     height: 9px;
     border-radius: 10px 10px 4px 4px;
     background: currentColor;
+    content: "";
+}
+
+.employee-detail-card-heading .fa-briefcase::before {
+    display: block;
+    width: 20px;
+    height: 15px;
+    border: 2px solid currentColor;
+    border-radius: 3px;
+    content: "";
+}
+
+.employee-detail-card-heading .fa-briefcase::after {
+    position: absolute;
+    top: 11px;
+    left: 16px;
+    width: 8px;
+    height: 4px;
+    border: 2px solid currentColor;
+    border-bottom: 0;
+    border-radius: 2px 2px 0 0;
     content: "";
 }
 
@@ -278,6 +303,49 @@
     font-weight: 700;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.employee-detail-list--profile dd {
+    overflow: visible;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+    white-space: normal;
+}
+
+.employee-detail-list--profile .employee-detail-list-wide {
+    grid-column: 1 / -1;
+}
+
+.employee-detail-list--profile div:nth-last-child(-n+2) {
+    border-bottom: 1px solid #eef2f7;
+}
+
+.employee-detail-list--profile div:last-child {
+    border-bottom: 0;
+}
+
+.employee-detail-list--salary dd {
+    color: #1e3a8a;
+    font-size: .9rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.employee-detail-empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-height: 110px;
+    padding: 24px;
+    color: #64748b;
+    background: #f8fafc;
+    font-size: .84rem;
+    font-weight: 700;
+}
+
+.employee-detail-empty-state i {
+    color: #818cf8;
 }
 
 /* Leave table */

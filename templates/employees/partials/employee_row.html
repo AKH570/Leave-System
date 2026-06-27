@@ -1,0 +1,54 @@
+<tr id="employee-row-{{ employee.pk }}" data-employee-id="{{ employee.pk }}">
+    <th scope="row">
+        <div class="employee-identity">
+            <span class="employee-avatar" aria-hidden="true">
+                {{ employee.user.first_name|first|default:employee.user.username|first|upper }}
+            </span>
+            <span class="employee-identity-copy">
+                <span class="employee-name-line">
+                    <strong>{{ employee.user.get_full_name|default:employee.user.username }}</strong>
+                    <span> ({{ employee.employee_id }})</span>
+                </span>
+                <small>{{ employee.user.email|default:"No email provided" }}</small>
+            </span>
+        </div>
+    </th>
+    <td>
+        {% if employee.department %}
+            {{ employee.department }}
+        {% else %}
+            <span class="employee-muted">Not assigned</span>
+        {% endif %}
+    </td>
+    <td>{{ employee.designation|default:"Employee" }}</td>
+    <td>
+        <span class="employee-balance">
+            <strong>{{ employee.leave_balance }} day{{ employee.leave_balance|pluralize }}</strong>
+            <small>
+                {% if employee.uses_custom_leave %}
+                    Custom balance; {{ employee.used_leave_days }} approved day{{ employee.used_leave_days|pluralize }} recorded
+                {% else %}
+                    {{ employee.used_leave_days }} used of {{ employee.yearly_leave_allowance }}
+                {% endif %}
+            </small>
+        </span>
+    </td>
+    <td>
+        <span class="employee-status {% if employee.is_active %}employee-status--active{% else %}employee-status--inactive{% endif %}">
+            <span aria-hidden="true"></span>
+            {% if employee.is_active %}Active{% else %}Inactive{% endif %}
+        </span>
+    </td>
+    <td class="employee-view-column">
+        <div class="employee-action-group">
+            <a
+                href="{% url 'employee_admin_edit' employee.pk %}"
+                class="btn employee-icon-button employee-icon-button--edit js-employee-edit"
+                aria-label="Edit employee setup for {{ employee.user.get_full_name|default:employee.user.username }}"
+                title="Edit employee"
+                data-employee-id="{{ employee.pk }}">
+                <i class="fa-solid fa-pen" aria-hidden="true"></i>
+            </a>
+        </div>
+    </td>
+</tr>

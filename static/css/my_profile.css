@@ -255,7 +255,7 @@
     font-size: .82rem;
 }
 
-.my-profile-bio {
+.my-profile-job-description {
     grid-column: 1 / -1;
     border-top: 1px solid #eef2f7;
 }
@@ -667,7 +667,7 @@
         grid-template-columns: 1fr;
     }
 
-    .my-profile-bio,
+    .my-profile-job-description,
     .my-profile-field--wide {
         grid-column: auto;
     }

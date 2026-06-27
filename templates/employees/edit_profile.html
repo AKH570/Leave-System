@@ -69,16 +69,21 @@
                             <h3>Emergency contact</h3>
                             <p>Provide someone your organization can contact when needed.</p>
                         </div>
-                    {% elif field.name == 'bio' %}
+                    {% elif field.name == 'education' %}
                         <div class="my-profile-form-section">
-                            <h3>About you</h3>
-                            <p>Add a short professional introduction.</p>
+                            <h3>Professional information</h3>
+                            <p>Add your service length, education, and job description.</p>
+                        </div>
+                    {% elif field.name == 'job_description' %}
+                        <div class="my-profile-form-section">
+                            <h3>Role details</h3>
+                            <p>Describe your primary duties and responsibilities.</p>
                         </div>
                     {% endif %}
 
                     <div class="my-profile-field
                         {% if field.name == 'profile_picture' %} my-profile-field--wide my-profile-file-field{% endif %}
-                        {% if field.name == 'present_address' or field.name == 'permanent_address' or field.name == 'bio' %} my-profile-field--wide my-profile-textarea-field{% endif %}
+                        {% if field.name == 'present_address' or field.name == 'permanent_address' or field.name == 'education' or field.name == 'job_description' %} my-profile-field--wide my-profile-textarea-field{% endif %}
                         {% if field.errors %} my-profile-field--invalid{% endif %}">
                         <label for="{{ field.id_for_label }}" class="form-label">
                             {{ field.label }}

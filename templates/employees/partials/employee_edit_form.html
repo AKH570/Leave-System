@@ -1,0 +1,97 @@
+<form id="employeeEditForm" class="employee-edit-form" method="post" action="{% url 'employee_admin_update' employee.pk %}" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger py-2 mb-3" role="alert">
+            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+        </div>
+    {% endif %}
+
+    <section class="employee-modal-section employee-info-section" aria-labelledby="employeeInfoHeading">
+        <div class="employee-section-heading">
+            <span class="employee-section-icon"><i class="fa-regular fa-id-card" aria-hidden="true"></i></span>
+            <div>
+                <h3 id="employeeInfoHeading">Employee Information</h3>
+                <p>Profile details are read-only in this view.</p>
+            </div>
+        </div>
+        <div class="employee-readonly-layout">
+            <div class="employee-readonly-avatar" aria-label="Profile picture">
+                {% if form.profile and form.profile.profile_picture %}
+                    <img src="{{ form.profile.profile_picture.url }}" alt="Profile picture for {{ employee.user.get_full_name|default:employee.user.username }}">
+                {% else %}
+                    <span>{{ employee.user.first_name|first|default:employee.user.username|first|upper }}</span>
+                {% endif %}
+            </div>
+            <dl class="employee-readonly-grid">
+                <div><dt>Employee ID</dt><dd>{{ employee.employee_id }}</dd></div>
+                <div><dt>Employee Name</dt><dd>{{ employee.user.get_full_name|default:employee.user.username }}</dd></div>
+                <div><dt>Username</dt><dd>{{ employee.user.username }}</dd></div>
+                <div><dt>Email Address</dt><dd title="{{ employee.user.email|default:'Not provided' }}">{{ employee.user.email|default:"Not provided" }}</dd></div>
+                <div><dt>Mobile Number</dt><dd>{{ employee.user.phone|default:"Not provided" }}</dd></div>
+            </dl>
+        </div>
+    </section>
+
+    <section class="employee-modal-section employee-admin-section" aria-labelledby="adminSettingsHeading">
+        <div class="employee-section-heading">
+            <span class="employee-section-icon"><i class="fa-solid fa-user-gear" aria-hidden="true"></i></span>
+            <div>
+                <h3 id="adminSettingsHeading">Administrative Settings</h3>
+                <p>Only these employment settings can be updated.</p>
+            </div>
+        </div>
+        <div class="employee-admin-grid">
+            {% for field in form %}
+                <div class="employee-modal-field">
+                    <label class="form-label" for="{{ field.id_for_label }}">
+                        {{ field.label }}
+                        {% if field.field.required %}<span class="employee-required" aria-label="required">*</span>{% endif %}
+                    </label>
+                    {{ field }}
+                    {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                    {% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                    {% if field.name == 'department' %}
+                        <button
+                            type="button"
+                            class="employee-add-department-trigger js-add-department"
+                            data-create-url="{% url 'department_quick_create' %}"
+                            aria-expanded="false"
+                            aria-controls="quickDepartmentPanel"
+                        >
+                            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                            Add New Department
+                        </button>
+                        <div class="employee-quick-department d-none" id="quickDepartmentPanel">
+                            <label for="quickDepartmentName">New department name</label>
+                            <div class="employee-quick-department-row">
+                                <input
+                                    type="text"
+                                    id="quickDepartmentName"
+                                    class="form-control"
+                                    maxlength="100"
+                                    placeholder="e.g. Human Resources"
+                                    autocomplete="off"
+                                >
+                                <button type="button" class="btn btn-primary js-create-department">Add</button>
+                                <button type="button" class="btn btn-light js-cancel-department" aria-label="Cancel adding department">
+                                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            <div class="employee-quick-department-feedback" role="alert"></div>
+                        </div>
+                        <div class="employee-department-created" role="status" aria-live="polite"></div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <div class="employee-modal-actions">
+        <button type="button" class="btn btn-light employee-modal-cancel" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary employee-modal-save">
+            <span class="spinner-border spinner-border-sm d-none" aria-hidden="true"></span>
+            <span class="employee-save-label">Update Employee</span>
+        </button>
+    </div>
+</form>
