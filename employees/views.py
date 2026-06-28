@@ -22,7 +22,7 @@ from django.views.generic import (
     UpdateView,
 )
 from departments.models import Department
-from .models import EmpDesignation, EmpProfile, Employee, LeaveRequest, LeaveType
+from .models import EmpDesignation, EmpProfile, EmpSalary, Employee, LeaveRequest, LeaveType
 from attendances.models import Attendance
 from .forms import (
     DepartmentForm,
@@ -30,6 +30,7 @@ from .forms import (
     EmployeeAdminEditForm,
     EmployeeAdminUpdateForm,
     EmpProfileForm,
+    EmpSalaryForm,
     LeaveRequestForm,
     LeaveApprovalForm,
     LeaveTypeForm,
@@ -62,6 +63,83 @@ class AdminAccessMixin(UserPassesTestMixin):
             messages.error(self.request, 'You do not have permission to access HR settings.')
             return redirect('dashboard')
         return super().handle_no_permission()
+
+
+class SalaryListView(LoginRequiredMixin, AdminAccessMixin, ListView):
+    model = EmpSalary
+    template_name = 'salaries/salary_list.html'
+    context_object_name = 'salary_records'
+
+    def get_queryset(self):
+        queryset = EmpSalary.objects.select_related(
+            'employee__user', 'employee__department', 'employee__designation',
+        )
+        query = self.request.GET.get('q', '').strip()
+        status = self.request.GET.get('status', '').strip()
+        if query:
+            queryset = queryset.filter(
+                Q(employee__employee_id__icontains=query)
+                | Q(employee__user__first_name__icontains=query)
+                | Q(employee__user__last_name__icontains=query)
+                | Q(employee__user__username__icontains=query)
+                | Q(bank_account_no__icontains=query)
+            )
+        if status == 'active':
+            queryset = queryset.filter(is_active=True)
+        elif status == 'inactive':
+            queryset = queryset.filter(is_active=False)
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        all_records = EmpSalary.objects.all()
+        context.update({
+            'search_query': self.request.GET.get('q', '').strip(),
+            'selected_status': self.request.GET.get('status', '').strip(),
+            'total_records': all_records.count(),
+            'active_records': all_records.filter(is_active=True).count(),
+            'employees_without_salary': Employee.objects.exclude(
+                salary_records__isnull=False,
+            ).count(),
+            'total_monthly_payroll': all_records.filter(is_active=True).aggregate(
+                total=Sum('net_salary'),
+            )['total'] or 0,
+        })
+        return context
+
+
+class SalaryFormMixin(LoginRequiredMixin, AdminAccessMixin):
+    model = EmpSalary
+    form_class = EmpSalaryForm
+    template_name = 'salaries/salary_form.html'
+    success_url = reverse_lazy('salary_list')
+
+    def form_valid(self, form):
+        form.instance.updated_by = self.request.user
+        response = super().form_valid(form)
+        messages.success(self.request, self.success_message)
+        return response
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_update'] = bool(self.object and self.object.pk)
+        return context
+
+
+class SalaryCreateView(SalaryFormMixin, CreateView):
+    success_message = 'Salary information added successfully.'
+
+    def get_initial(self):
+        initial = super().get_initial()
+        employee_id = self.request.GET.get('employee')
+        if employee_id and Employee.objects.filter(pk=employee_id).exists():
+            initial['employee'] = employee_id
+        initial.setdefault('salary_effective_from', timezone.localdate())
+        return initial
+
+
+class SalaryUpdateView(SalaryFormMixin, UpdateView):
+    success_message = 'Salary information updated successfully.'
 
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'dashboard/employee_dashboard.html'
@@ -159,13 +237,80 @@ class EmployeeProfileMixin(LoginRequiredMixin):
         return super().dispatch(request, *args, **kwargs)
 
 class EmployeeProfileView(EmployeeProfileMixin, TemplateView):
-    template_name = 'employees/my_profile.html'
+    template_name = 'employees/profile_summary.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         profile, _ = EmpProfile.objects.get_or_create(employee=self.employee)
-        context['employee'] = self.employee
-        context['profile'] = profile
+        today = timezone.localdate()
+        current_year = today.year
+        leave_summary = self.employee.get_leave_summary(current_year)
+        approved_leaves = self.employee.leave_requests.filter(
+            status='APPROVED',
+            from_date__year=current_year,
+        )
+        leave_type_balances = []
+        if not leave_summary['uses_custom_leave']:
+            for leave_type in LeaveType.objects.all().order_by('name'):
+                used = approved_leaves.filter(leave_type=leave_type).aggregate(
+                    total=Sum('total_days'),
+                )['total'] or 0
+                leave_type_balances.append({
+                    'name': leave_type.name,
+                    'allowance': leave_type.yearly_limit,
+                    'used': used,
+                    'balance': max(leave_type.yearly_limit - used, 0),
+                })
+
+        latest_salary = self.employee.salary_records.filter(
+            is_active=True,
+            salary_effective_from__lte=today,
+        ).filter(
+            Q(salary_end_date__isnull=True) | Q(salary_end_date__gte=today),
+        ).order_by('-salary_effective_from', '-pk').first()
+
+        total_allowances = None
+        total_deductions = None
+        payment_details = ''
+        if latest_salary:
+            total_allowances = (
+                latest_salary.gross_salary - latest_salary.basic_salary
+            )
+            total_deductions = latest_salary.total_deductions
+            if latest_salary.payment_method == EmpSalary.PaymentMethod.BANK_TRANSFER:
+                payment_details = ' · '.join(filter(None, (
+                    latest_salary.bank_name,
+                    latest_salary.bank_account_no,
+                    latest_salary.branch_name,
+                )))
+            elif latest_salary.payment_method in {
+                EmpSalary.PaymentMethod.BKASH,
+                EmpSalary.PaymentMethod.NAGAD,
+                EmpSalary.PaymentMethod.ROCKET,
+            }:
+                payment_details = ' · '.join(filter(None, (
+                    latest_salary.mobile_banking_name,
+                    latest_salary.mobile_banking_no,
+                )))
+
+        context.update({
+            'employee': self.employee,
+            'profile': profile,
+            'current_year': current_year,
+            'leave_balance': leave_summary['balance'],
+            'total_leave_taken': approved_leaves.aggregate(
+                total=Sum('total_days'),
+            )['total'] or 0,
+            'pending_leave_requests': self.employee.leave_requests.filter(
+                status='PENDING',
+            ).count(),
+            'uses_custom_leave': leave_summary['uses_custom_leave'],
+            'leave_type_balances': leave_type_balances,
+            'latest_salary': latest_salary,
+            'total_allowances': total_allowances,
+            'total_deductions': total_deductions,
+            'payment_details': payment_details,
+        })
         return context
 
 class EmployeeProfileUpdateView(EmployeeProfileMixin, UpdateView):

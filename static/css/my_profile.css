@@ -116,6 +116,25 @@
     color: rgba(255, 255, 255, .76);
 }
 
+.my-profile-hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    margin-top: 13px;
+}
+
+.my-profile-hero-meta > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: rgba(255, 255, 255, .82);
+    font-size: .72rem;
+    font-weight: 700;
+}
+
+.my-profile-status.is-active i { color: #6ee7a8; font-size: .5rem; }
+.my-profile-status.is-inactive i { color: #fca5a5; font-size: .5rem; }
+
 .my-profile-edit-button {
     display: inline-flex;
     align-items: center;
@@ -166,6 +185,48 @@
 }
 
 /* Cards and details */
+.my-profile-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.my-profile-summary-grid article {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 13px;
+    padding: 17px;
+    border: 1px solid #e5eaf1;
+    border-radius: 15px;
+    background: #fff;
+    box-shadow: 0 9px 24px rgba(15, 23, 42, .05);
+}
+
+.my-profile-summary-grid article div { min-width: 0; }
+.my-profile-summary-grid article strong,
+.my-profile-summary-grid article div span { display: block; }
+.my-profile-summary-grid article strong { overflow: hidden; color: #263248; font-size: 1.05rem; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.my-profile-summary-grid article div span { margin-top: 2px; color: #8490a5; font-size: .68rem; }
+.my-profile-summary-icon,
+.my-profile-heading-icon { display: grid; flex: 0 0 auto; place-items: center; border-radius: 11px; }
+.my-profile-summary-icon { width: 42px; height: 42px; }
+.my-profile-heading-icon { width: 38px; height: 38px; }
+.icon-purple { color: #6842a0; background: #f0eafa; }
+.icon-blue { color: #2970cc; background: #e9f2fe; }
+.icon-amber { color: #b66a08; background: #fff3dc; }
+.icon-green { color: #168451; background: #e8f8ef; }
+.icon-indigo { color: #4f46e5; background: #ececfe; }
+.icon-rose { color: #c43b62; background: #fdebf1; }
+
+.my-profile-section-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 18px;
+}
+
 .my-profile-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -185,9 +246,105 @@
 }
 
 .my-profile-card-heading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
     padding: 20px 22px;
     border-bottom: 1px solid #edf1f6;
 }
+
+.my-profile-inline-status {
+    display: inline-flex;
+    padding: 4px 9px;
+    border-radius: 999px;
+    font-size: .68rem;
+}
+
+.my-profile-inline-status.active { color: #147645; background: #e8f8ef; }
+.my-profile-inline-status.inactive { color: #a23333; background: #fff0f0; }
+
+.my-profile-balance-list {
+    padding: 17px 22px 20px;
+    border-top: 1px solid #eef2f7;
+}
+
+.my-profile-balance-list h3 {
+    margin: 0 0 12px;
+    color: #344054;
+    font-size: .75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.my-profile-balance-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    border-top: 1px solid #f0f2f6;
+}
+
+.my-profile-balance-row:first-of-type { border-top: 0; }
+.my-profile-balance-row strong,
+.my-profile-balance-row div span { display: block; }
+.my-profile-balance-row strong { color: #344054; font-size: .76rem; }
+.my-profile-balance-row div span { margin-top: 2px; color: #98a2b3; font-size: .66rem; }
+.my-profile-balance-pill { flex: 0 0 auto; padding: 4px 8px; border-radius: 999px; color: #6842a0; background: #f0eafa; font-size: .66rem; font-weight: 800; }
+.my-profile-empty-note { margin: 0; color: #8490a5; font-size: .76rem; }
+
+.my-profile-salary-highlight {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin: 0 22px 17px;
+    padding: 16px 18px;
+    border-radius: 13px;
+    color: #fff;
+    background: linear-gradient(130deg, #226b4c, #168451);
+}
+
+.my-profile-salary-highlight span,
+.my-profile-salary-highlight strong { display: block; }
+.my-profile-salary-highlight div span { color: #c9f3dd; font-size: .68rem; }
+.my-profile-salary-highlight strong { margin-top: 3px; font-size: 1.2rem; }
+.my-profile-salary-highlight > span { padding: 5px 9px; border: 1px solid rgba(255,255,255,.2); border-radius: 999px; font-size: .67rem; }
+
+.my-profile-no-data {
+    display: flex;
+    min-height: 150px;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 7px;
+    color: #98a2b3;
+}
+.my-profile-no-data i { font-size: 1.5rem; color: #baa9d2; }
+.my-profile-no-data strong { color: #596579; font-size: .8rem; }
+.my-profile-no-data span { font-size: .74rem; }
+
+.my-profile-long-text,
+.my-profile-address-grid > div {
+    padding: 18px 22px;
+    border-top: 1px solid #eef2f7;
+}
+
+.my-profile-long-text > span,
+.my-profile-address-grid span {
+    display: block;
+    margin-bottom: 6px;
+    color: #94a3b8;
+    font-size: .65rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.my-profile-long-text p,
+.my-profile-address-grid p { margin: 0; color: #475569; font-size: .8rem; line-height: 1.6; }
+.my-profile-address-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.my-profile-address-grid > div + div { border-left: 1px solid #eef2f7; }
 
 .my-profile-card-heading h2 {
     margin: 0 0 3px;
@@ -621,6 +778,8 @@
 
 /* Responsive layout */
 @media (max-width: 1000px) {
+    .my-profile-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .my-profile-section-grid { grid-template-columns: 1fr; }
     .my-profile-grid {
         grid-template-columns: 1fr;
     }
@@ -662,6 +821,7 @@
 
     .my-profile-details,
     .my-profile-text-grid,
+    .my-profile-address-grid,
     .my-profile-readonly-grid,
     .my-profile-form-grid {
         grid-template-columns: 1fr;
@@ -697,4 +857,7 @@
     .my-profile-form-actions .btn {
         flex: 1;
     }
+
+    .my-profile-summary-grid { grid-template-columns: 1fr; }
+    .my-profile-address-grid > div + div { border-left: 0; }
 }

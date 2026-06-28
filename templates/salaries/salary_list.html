@@ -1,0 +1,67 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/salary.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="salary-page">
+    <section class="salary-hero">
+        <div>
+            <span class="salary-eyebrow">Payroll management</span>
+            <h1>Employee salaries</h1>
+            <p>Manage salary structures, deductions, and payment information from one secure workspace.</p>
+        </div>
+        <a href="{% url 'salary_add' %}" class="btn salary-primary-btn">
+            <i class="fas fa-plus" aria-hidden="true"></i> Add salary
+        </a>
+    </section>
+
+    <section class="salary-stat-grid" aria-label="Salary summary">
+        <article><span class="salary-stat-icon blue"><i class="fas fa-file-invoice-dollar"></i></span><div><strong>{{ total_records }}</strong><span>Salary records</span></div></article>
+        <article><span class="salary-stat-icon green"><i class="fas fa-circle-check"></i></span><div><strong>{{ active_records }}</strong><span>Active records</span></div></article>
+        <article><span class="salary-stat-icon amber"><i class="fas fa-user-clock"></i></span><div><strong>{{ employees_without_salary }}</strong><span>Employees not configured</span></div></article>
+        <article><span class="salary-stat-icon violet"><i class="fas fa-coins"></i></span><div><strong>৳{{ total_monthly_payroll|floatformat:2 }}</strong><span>Active net payroll</span></div></article>
+    </section>
+
+    <section class="salary-card">
+        <div class="salary-card-header">
+            <div><h2>Salary directory</h2><p>{{ salary_records|length }} record{{ salary_records|length|pluralize }} shown</p></div>
+            <form method="get" class="salary-filters" role="search">
+                <label class="salary-search"><i class="fas fa-search"></i><input type="search" name="q" value="{{ search_query }}" placeholder="Search employee, ID, account…" aria-label="Search salaries"></label>
+                <select name="status" class="form-select" aria-label="Filter salary status">
+                    <option value="">All statuses</option>
+                    <option value="active"{% if selected_status == 'active' %} selected{% endif %}>Active</option>
+                    <option value="inactive"{% if selected_status == 'inactive' %} selected{% endif %}>Inactive</option>
+                </select>
+                <button class="btn salary-filter-btn" type="submit">Filter</button>
+                {% if search_query or selected_status %}<a href="{% url 'salary_list' %}" class="btn btn-light">Clear</a>{% endif %}
+            </form>
+        </div>
+
+        <div class="table-responsive">
+            <table class="salary-table">
+                <thead><tr><th>Employee</th><th>Basic salary</th><th>Gross salary</th><th>Deductions</th><th>Net salary</th><th>Payment</th><th>Effective from</th><th>Status</th><th class="text-end">Action</th></tr></thead>
+                <tbody>
+                {% for salary in salary_records %}
+                    <tr>
+                        <td><div class="salary-employee"><span>{{ salary.employee.user.first_name|first|default:salary.employee.user.username|first|upper }}</span><div><strong>{{ salary.employee.user.get_full_name|default:salary.employee.user.username }}</strong><small>{{ salary.employee.employee_id }}{% if salary.employee.designation %} · {{ salary.employee.designation }}{% endif %}</small></div></div></td>
+                        <td>৳{{ salary.basic_salary|floatformat:2 }}</td>
+                        <td>৳{{ salary.gross_salary|floatformat:2 }}</td>
+                        <td>৳{{ salary.total_deductions|floatformat:2 }}</td>
+                        <td><strong class="salary-net">৳{{ salary.net_salary|floatformat:2 }}</strong></td>
+                        <td>{{ salary.get_payment_method_display }}</td>
+                        <td>{{ salary.salary_effective_from|date:"d M Y" }}</td>
+                        <td><span class="salary-badge {% if salary.is_active %}active{% else %}inactive{% endif %}">{% if salary.is_active %}Active{% else %}Inactive{% endif %}</span></td>
+                        <td class="text-end"><a href="{% url 'salary_edit' salary.pk %}" class="salary-edit-btn" aria-label="Update salary for {{ salary.employee }}"><i class="fas fa-pen"></i> Update</a></td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="9"><div class="salary-empty"><i class="fas fa-wallet"></i><h3>No salary records found</h3><p>Add the first salary record or adjust your filters.</p><a href="{% url 'salary_add' %}" class="btn salary-primary-btn">Add salary</a></div></td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

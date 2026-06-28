@@ -1,0 +1,147 @@
+/* Shared application footer */
+html,
+body {
+    min-height: 100%;
+}
+
+body {
+    min-height: 100vh;
+}
+
+.dashboard-content-wrapper {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+}
+
+.dashboard-content-wrapper > .container-fluid {
+    flex: 1 0 auto;
+}
+
+.app-footer {
+    flex-shrink: 0;
+    width: 100%;
+    margin-top: 38px;
+    border-top: 1px solid #6a5194;
+    background: linear-gradient(135deg, #4c3575 0%, #3f2b63 100%);
+    box-shadow: 0 -5px 18px rgba(57, 35, 95, .16);
+    color: #e8e1f2;
+}
+
+.app-footer__inner {
+    display: flex;
+    width: 100%;
+    max-width: 1440px;
+    min-height: 78px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    margin: 0 auto;
+    padding: 18px 12px;
+}
+
+.app-footer__brand,
+.app-footer__meta {
+    display: flex;
+    align-items: center;
+}
+
+.app-footer__brand {
+    gap: 10px;
+}
+
+.app-footer__brand strong {
+    color: #ffffff;
+    font-size: .9rem;
+    font-weight: 800;
+}
+
+.app-footer__brand span,
+.app-footer__meta {
+    font-size: .78rem;
+}
+
+.app-footer__brand > span {
+    padding-left: 10px;
+    border-left: 1px solid rgba(255, 255, 255, .28);
+    color: #ddd3eb;
+    font-style: italic;
+}
+
+.app-footer__meta {
+    justify-content: flex-end;
+    gap: 13px;
+    text-align: right;
+}
+
+.app-footer__version strong {
+    color: #ffffff;
+    font-weight: 800;
+}
+
+.app-footer__divider {
+    width: 1px;
+    height: 18px;
+    background: rgba(255, 255, 255, .28);
+}
+
+.app-footer__heart {
+    color: #dc3545;
+    font-size: .92rem;
+}
+
+.auth-page-shell {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+}
+
+.auth-page-content {
+    display: flex;
+    min-width: 0;
+    flex: 1 0 auto;
+}
+
+.auth-page-content > .login-page {
+    min-height: auto;
+    flex: 1 0 auto;
+}
+
+.auth-page-shell .app-footer {
+    margin-top: 0;
+}
+
+.auth-page-shell .app-footer__inner {
+    padding-right: 24px;
+    padding-left: 24px;
+}
+
+@media (max-width: 767.98px) {
+    .app-footer__inner,
+    .app-footer__brand,
+    .app-footer__meta {
+        flex-direction: column;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .app-footer__inner {
+        gap: 9px;
+        padding-top: 20px;
+        padding-bottom: 20px;
+    }
+
+    .app-footer__brand,
+    .app-footer__meta {
+        gap: 5px;
+    }
+
+    .app-footer__brand > span {
+        padding-left: 0;
+        border-left: 0;
+    }
+
+    .app-footer__divider {
+        display: none;
+    }
+}

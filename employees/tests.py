@@ -429,6 +429,75 @@ class EmployeeProfileTests(TestCase):
         self.assertContains(response, self.employee.employee_id)
         self.assertContains(response, self.user.email)
 
+    def test_profile_summary_displays_leave_salary_job_and_address_details(self):
+        today = timezone.localdate()
+        leave_type = LeaveType.objects.create(
+            name=LeaveType.CASUAL,
+            yearly_limit=12,
+        )
+        LeaveRequest.objects.create(
+            employee=self.employee,
+            leave_type=leave_type,
+            from_date=today,
+            to_date=today + timedelta(days=1),
+            total_days=2,
+            reason='Personal work',
+            status='APPROVED',
+        )
+        LeaveRequest.objects.create(
+            employee=self.employee,
+            leave_type=leave_type,
+            from_date=today + timedelta(days=10),
+            to_date=today + timedelta(days=10),
+            total_days=1,
+            reason='Appointment',
+            status='PENDING',
+        )
+        EmpProfile.objects.create(
+            employee=self.employee,
+            identification_no='NID-PROFILE-123',
+            education='BSc',
+            job_description='Builds employee systems.',
+            present_address='Dhaka present address',
+            permanent_address='Khulna permanent address',
+        )
+        salary = EmpSalary.objects.create(
+            employee=self.employee,
+            basic_salary=Decimal('50000.00'),
+            house_rent=Decimal('15000.00'),
+            provident_fund=Decimal('3000.00'),
+            bank_name='Profile Bank',
+            bank_account_no='ACCOUNT-789',
+            salary_effective_from=today,
+        )
+        other_user = User.objects.create_user(
+            username='other-salary-user',
+            password='test-password',
+        )
+        other_employee = Employee.objects.create(user=other_user)
+        EmpSalary.objects.create(
+            employee=other_employee,
+            basic_salary=Decimal('987654.00'),
+            salary_effective_from=today,
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('employee_profile'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['latest_salary'], salary)
+        self.assertEqual(response.context['leave_balance'], 10)
+        self.assertEqual(response.context['total_leave_taken'], 2)
+        self.assertEqual(response.context['pending_leave_requests'], 1)
+        self.assertContains(response, 'NID-PROFILE-123')
+        self.assertContains(response, 'Builds employee systems.')
+        self.assertContains(response, 'Dhaka present address')
+        self.assertContains(response, '65000.00')
+        self.assertContains(response, '62000.00')
+        self.assertContains(response, 'ACCOUNT-789')
+        self.assertContains(response, '10 left')
+        self.assertNotContains(response, '987654.00')
+
     def test_employee_can_update_only_additional_profile_fields(self):
         self.client.force_login(self.user)
 
@@ -666,3 +735,106 @@ class EmpSalaryTests(TestCase):
                 'emp_sal_active_idx',
             },
         )
+
+
+class SalaryManagementViewTests(TestCase):
+    def setUp(self):
+        self.admin_user = User.objects.create_user(
+            username='payroll-admin',
+            password='test-password',
+            role='ADMIN',
+        )
+        self.employee_user = User.objects.create_user(
+            username='payroll-employee',
+            first_name='Payroll',
+            last_name='Employee',
+            password='test-password',
+            role='EMPLOYEE',
+        )
+        self.employee = Employee.objects.create(user=self.employee_user)
+
+    def salary_data(self, **overrides):
+        data = {
+            'employee': self.employee.pk,
+            'basic_salary': '50000.00',
+            'house_rent': '15000.00',
+            'medical_allowance': '3000.00',
+            'transport_allowance': '2000.00',
+            'food_allowance': '1000.00',
+            'mobile_allowance': '500.00',
+            'other_allowance': '500.00',
+            'provident_fund': '3000.00',
+            'loan_deduction': '1000.00',
+            'advance_salary': '0.00',
+            'other_deduction': '0.00',
+            'increment_amount': '0.00',
+            'increment_date': '',
+            'bank_name': 'Payroll Bank',
+            'bank_account_no': '123456789',
+            'branch_name': 'Main Branch',
+            'payment_method': 'BANK_TRANSFER',
+            'mobile_banking_name': '',
+            'mobile_banking_no': '',
+            'salary_effective_from': '2026-06-01',
+            'salary_end_date': '',
+            'is_active': 'on',
+            'remarks': 'Monthly salary',
+        }
+        data.update(overrides)
+        return data
+
+    def test_admin_can_view_salary_page_and_sidebar_link(self):
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse('salary_list'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Employee salaries')
+        self.assertContains(response, reverse('salary_add'))
+
+    def test_employee_cannot_access_salary_urls_or_see_menu(self):
+        self.client.force_login(self.employee_user)
+
+        list_response = self.client.get(reverse('salary_list'))
+        add_response = self.client.get(reverse('salary_add'))
+        dashboard_response = self.client.get(reverse('dashboard'))
+
+        self.assertRedirects(list_response, reverse('dashboard'))
+        self.assertRedirects(add_response, reverse('dashboard'))
+        self.assertNotContains(dashboard_response, reverse('salary_list'))
+
+    def test_admin_can_create_and_update_calculated_salary(self):
+        self.client.force_login(self.admin_user)
+
+        create_response = self.client.post(
+            reverse('salary_add'),
+            self.salary_data(),
+        )
+        salary = EmpSalary.objects.get(employee=self.employee)
+
+        self.assertRedirects(create_response, reverse('salary_list'))
+        self.assertEqual(salary.gross_salary, Decimal('72000.00'))
+        self.assertEqual(salary.net_salary, Decimal('68000.00'))
+        self.assertEqual(salary.updated_by, self.admin_user)
+
+        update_response = self.client.post(
+            reverse('salary_edit', args=[salary.pk]),
+            self.salary_data(basic_salary='55000.00'),
+        )
+        salary.refresh_from_db()
+
+        self.assertRedirects(update_response, reverse('salary_list'))
+        self.assertEqual(salary.gross_salary, Decimal('77000.00'))
+        self.assertEqual(salary.net_salary, Decimal('73000.00'))
+
+    def test_deductions_cannot_exceed_gross_salary(self):
+        self.client.force_login(self.admin_user)
+
+        response = self.client.post(
+            reverse('salary_add'),
+            self.salary_data(provident_fund='80000.00'),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Total deductions cannot be greater than gross salary.')
+        self.assertFalse(EmpSalary.objects.exists())

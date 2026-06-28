@@ -18,6 +18,7 @@
     <!-- Dashboard CSS -->
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <link rel="stylesheet" href="{% static 'css/apply_leave.css' %}">
+    <link rel="stylesheet" href="{% static 'css/footer.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -33,20 +34,26 @@
 
         <ul>
 
-            <li class="active">
+            {% with current_url=request.resolver_match.url_name %}
+            <li{% if current_url == 'dashboard' or current_url == 'adm_dashboard' or current_url == 'emp_dashboard' %} class="active"{% endif %}>
                 <a href="{% url 'dashboard' %}">
                     <i class="fas fa-home"></i>
                     Dashboard
                 </a>
             </li>
              {% if user.is_superuser or user.is_staff or user.role == 'ADMIN' %}
-            <li>
+            <li{% if current_url == 'employee_list' or current_url == 'employee_detail' or current_url == 'employee_admin_edit' or current_url == 'employee_admin_update' %} class="active"{% endif %}>
                 <a href="{% url 'employee_list' %}">
                     <i class="fas fa-users" role="img" aria-label="Employees"></i>
                     Employees
                 </a>
             </li>
-            {% with current_url=request.resolver_match.url_name %}
+            <li{% if current_url == 'salary_list' or current_url == 'salary_add' or current_url == 'salary_edit' %} class="active"{% endif %}>
+                <a href="{% url 'salary_list' %}">
+                    <i class="fas fa-money-check-dollar" role="img" aria-label="Salary"></i>
+                    Salary
+                </a>
+            </li>
             <li class="sidebar-menu-group{% if current_url == 'department_list' or current_url == 'department_add' or current_url == 'department_edit' or current_url == 'department_delete' or current_url == 'designation_list' or current_url == 'designation_add' or current_url == 'designation_edit' or current_url == 'designation_delete' or current_url == 'leave_type_list' or current_url == 'leave_type_add' or current_url == 'leave_type_edit' or current_url == 'leave_type_delete' %} is-open{% endif %}">
                 <button
                     type="button"
@@ -81,7 +88,6 @@
                     </li>
                 </ul>
             </li>
-            {% endwith %}
             {% else %}
 
             <li>
@@ -98,6 +104,7 @@
                 </a>
             </li>
             {% endif %}
+            {% endwith %}
             <li>
                 <a href="{% url 'accounts:logout' %}">
                     <i class="fas fa-sign-out-alt"></i>
@@ -254,6 +261,7 @@
 
             {% block content %}{% endblock %}
         </div>
+        {% include 'base/footer.html' %}
     </main>
 
     <!-- Bootstrap JS -->

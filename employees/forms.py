@@ -2,12 +2,85 @@ from django import forms
 from django.db import models
 from django.db import transaction
 from django.utils.text import slugify
-from .models import EmpDesignation, EmpProfile, LeaveRequest, LeaveType, Employee
+from .models import EmpDesignation, EmpProfile, EmpSalary, LeaveRequest, LeaveType, Employee
 from accounts.models import Registration
 from departments.models import Department
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
+
+
+class EmpSalaryForm(forms.ModelForm):
+    """Administrator form for an effective-dated employee salary record."""
+
+    MONEY_FIELDS = (
+        'basic_salary', 'house_rent', 'medical_allowance',
+        'transport_allowance', 'food_allowance', 'mobile_allowance',
+        'other_allowance', 'provident_fund', 'loan_deduction',
+        'advance_salary', 'other_deduction', 'increment_amount',
+    )
+
+    class Meta:
+        model = EmpSalary
+        fields = [
+            'employee', 'basic_salary', 'house_rent', 'medical_allowance',
+            'transport_allowance', 'food_allowance', 'mobile_allowance',
+            'other_allowance', 'provident_fund', 'loan_deduction',
+            'advance_salary', 'other_deduction', 'increment_amount',
+            'increment_date', 'bank_name', 'bank_account_no', 'branch_name',
+            'payment_method', 'mobile_banking_name', 'mobile_banking_no',
+            'salary_effective_from', 'salary_end_date', 'is_active', 'remarks',
+        ]
+        widgets = {
+            'employee': forms.Select(attrs={'class': 'form-select'}),
+            'payment_method': forms.Select(attrs={'class': 'form-select'}),
+            'increment_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'salary_effective_from': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'salary_end_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'remarks': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Optional payroll notes'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['employee'].queryset = Employee.objects.select_related(
+            'user', 'department', 'designation',
+        ).order_by('employee_id')
+        self.fields['employee'].empty_label = 'Select an employee'
+
+        for name in self.MONEY_FIELDS:
+            field = self.fields[name]
+            field.widget.attrs.update({
+                'class': 'form-control salary-money-input',
+                'min': '0',
+                'step': '0.01',
+                'inputmode': 'decimal',
+                'placeholder': '0.00',
+            })
+        for name in ('bank_name', 'bank_account_no', 'branch_name', 'mobile_banking_name', 'mobile_banking_no'):
+            self.fields[name].widget.attrs.setdefault('class', 'form-control')
+
+    def clean(self):
+        cleaned_data = super().clean()
+        method = cleaned_data.get('payment_method')
+        if method == EmpSalary.PaymentMethod.BANK_TRANSFER:
+            for field_name, label in (
+                ('bank_name', 'Bank name'),
+                ('bank_account_no', 'Bank account number'),
+            ):
+                if not cleaned_data.get(field_name):
+                    self.add_error(field_name, f'{label} is required for bank transfer.')
+        elif method in {
+            EmpSalary.PaymentMethod.BKASH,
+            EmpSalary.PaymentMethod.NAGAD,
+            EmpSalary.PaymentMethod.ROCKET,
+        }:
+            if not cleaned_data.get('mobile_banking_no'):
+                self.add_error(
+                    'mobile_banking_no',
+                    'Mobile banking number is required for this payment method.',
+                )
+        return cleaned_data
 
 
 class ProfilePictureInput(forms.ClearableFileInput):

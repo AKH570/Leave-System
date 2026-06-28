@@ -1,0 +1,57 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/salary.css' %}">{% endblock %}
+
+{% block content %}
+<div class="salary-page salary-form-page">
+    <div class="salary-form-heading">
+        <div><a href="{% url 'salary_list' %}" class="salary-back"><i class="fas fa-arrow-left"></i> Back to salaries</a><span class="salary-eyebrow">Payroll management</span><h1>{% if is_update %}Update salary{% else %}Add salary{% endif %}</h1><p>Enter earnings, deductions, and payment details. Totals update automatically.</p></div>
+        <div class="salary-live-totals">
+            <div><span>Gross salary</span><strong id="grossSalaryPreview">৳{{ form.instance.gross_salary|default:0|floatformat:2 }}</strong></div>
+            <div class="net"><span>Net salary</span><strong id="netSalaryPreview">৳{{ form.instance.net_salary|default:0|floatformat:2 }}</strong></div>
+        </div>
+    </div>
+
+    <form method="post" class="salary-form" id="salaryForm" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+
+        <section class="salary-form-card">
+            <header><span><i class="fas fa-user-tie"></i></span><div><h2>Employee Information</h2><p>Employee and salary effective period</p></div></header>
+            <div class="salary-form-grid">
+                {% include 'salaries/salary_field.html' with field=form.employee wide=True %}
+                {% include 'salaries/salary_field.html' with field=form.salary_effective_from %}
+                {% include 'salaries/salary_field.html' with field=form.salary_end_date %}
+                <div class="salary-checkbox">{{ form.is_active }}<label for="{{ form.is_active.id_for_label }}">Active salary record</label>{{ form.is_active.errors }}</div>
+            </div>
+        </section>
+
+        <section class="salary-form-card">
+            <header><span class="green"><i class="fas fa-arrow-trend-up"></i></span><div><h2>Earnings / Allowances</h2><p>Amounts included in gross salary</p></div></header>
+            <div class="salary-form-grid money-grid">
+                {% include 'salaries/salary_field.html' with field=form.basic_salary %}{% include 'salaries/salary_field.html' with field=form.house_rent %}{% include 'salaries/salary_field.html' with field=form.medical_allowance %}{% include 'salaries/salary_field.html' with field=form.transport_allowance %}{% include 'salaries/salary_field.html' with field=form.food_allowance %}{% include 'salaries/salary_field.html' with field=form.mobile_allowance %}{% include 'salaries/salary_field.html' with field=form.other_allowance %}
+            </div>
+        </section>
+
+        <section class="salary-form-card">
+            <header><span class="red"><i class="fas fa-arrow-trend-down"></i></span><div><h2>Deductions</h2><p>Amounts subtracted from gross salary</p></div></header>
+            <div class="salary-form-grid money-grid">
+                {% include 'salaries/salary_field.html' with field=form.provident_fund %}{% include 'salaries/salary_field.html' with field=form.loan_deduction %}{% include 'salaries/salary_field.html' with field=form.advance_salary %}{% include 'salaries/salary_field.html' with field=form.other_deduction %}
+            </div>
+            <div class="salary-net-warning" id="salaryNetWarning" role="alert"><i class="fas fa-triangle-exclamation"></i> Total deductions cannot exceed gross salary.</div>
+        </section>
+
+        <section class="salary-form-card">
+            <header><span class="violet"><i class="fas fa-building-columns"></i></span><div><h2>Payment Information</h2><p>Bank, mobile banking, and increment details</p></div></header>
+            <div class="salary-form-grid">
+                {% include 'salaries/salary_field.html' with field=form.payment_method %}{% include 'salaries/salary_field.html' with field=form.bank_name %}{% include 'salaries/salary_field.html' with field=form.bank_account_no %}{% include 'salaries/salary_field.html' with field=form.branch_name %}{% include 'salaries/salary_field.html' with field=form.mobile_banking_name %}{% include 'salaries/salary_field.html' with field=form.mobile_banking_no %}{% include 'salaries/salary_field.html' with field=form.increment_amount %}{% include 'salaries/salary_field.html' with field=form.increment_date %}{% include 'salaries/salary_field.html' with field=form.remarks wide=True %}
+            </div>
+        </section>
+
+        <div class="salary-form-actions"><a href="{% url 'salary_list' %}" class="btn btn-light">Cancel</a><button type="submit" class="btn salary-primary-btn" id="salarySubmit"><i class="fas fa-floppy-disk"></i> {% if is_update %}Update salary{% else %}Save salary{% endif %}</button></div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/salary_form.js' %}"></script>{% endblock %}

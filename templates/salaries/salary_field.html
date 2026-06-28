@@ -1,0 +1,6 @@
+<div class="salary-field{% if wide %} wide{% endif %}">
+    <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span aria-hidden="true">*</span>{% endif %}</label>
+    {% if field.name in 'basic_salary house_rent medical_allowance transport_allowance food_allowance mobile_allowance other_allowance provident_fund loan_deduction advance_salary other_deduction increment_amount' %}<div class="salary-money-field"><span>৳</span>{{ field }}</div>{% else %}{{ field }}{% endif %}
+    {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+    {% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+</div>

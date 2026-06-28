@@ -511,8 +511,13 @@ class EmpSalary(models.Model):
         self.net_salary = self.gross_salary - total_deductions
         return self.gross_salary, self.net_salary
 
+    @property
+    def total_deductions(self):
+        return self.gross_salary - self.net_salary
+
     def clean(self):
         super().clean()
+        self.calculate_totals()
         if (
             self.salary_effective_from
             and self.salary_end_date
@@ -521,6 +526,12 @@ class EmpSalary(models.Model):
             raise ValidationError({
                 'salary_end_date': (
                     'Salary end date cannot be before the effective date.'
+                ),
+            })
+        if self.net_salary < Decimal('0.00'):
+            raise ValidationError({
+                'other_deduction': (
+                    'Total deductions cannot be greater than gross salary.'
                 ),
             })
 

@@ -1,0 +1,78 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/my_profile.css' %}">{% endblock %}
+
+{% block content %}
+<div class="my-profile-page">
+    <section class="my-profile-hero">
+        <img src="{{ current_profile_picture_url }}" alt="{{ user.get_full_name|default:user.username }} profile picture" class="my-profile-avatar js-profile-avatar">
+        <div class="my-profile-intro">
+            <span>{{ employee.employee_id }}</span>
+            <h1>{{ user.get_full_name|default:user.username }}</h1>
+            <p>{{ employee.designation|default:"Not provided" }}{% if employee.department %} · {{ employee.department }}{% endif %}</p>
+            <div class="my-profile-hero-meta">
+                <span class="my-profile-status {% if employee.is_active %}is-active{% else %}is-inactive{% endif %}"><i class="fas fa-circle"></i>{% if employee.is_active %}Active employee{% else %}Inactive employee{% endif %}</span>
+                <span><i class="fas fa-calendar-check"></i> Joined {{ employee.joining_date|date:"d M Y" }}</span>
+            </div>
+        </div>
+        <a href="{% url 'employee_profile_edit' %}" class="btn btn-light my-profile-edit-button"><i class="fas fa-pen"></i>Edit profile</a>
+    </section>
+
+    <!-- <section class="my-profile-summary-grid" aria-label="Profile summary">
+        <article><span class="my-profile-summary-icon icon-purple"><i class="fas fa-calendar-days"></i></span><div><strong>{{ leave_balance }}</strong><span>Leave balance</span></div></article>
+        <article><span class="my-profile-summary-icon icon-blue"><i class="fas fa-person-walking-arrow-right"></i></span><div><strong>{{ total_leave_taken }}</strong><span>Leave taken in {{ current_year }}</span></div></article>
+        <article><span class="my-profile-summary-icon icon-amber"><i class="fas fa-hourglass-half"></i></span><div><strong>{{ pending_leave_requests }}</strong><span>Pending requests</span></div></article>
+        <article><span class="my-profile-summary-icon icon-green"><i class="fas fa-briefcase"></i></span><div><strong>{{ employee.service_length }}</strong><span>Service length</span></div></article>
+    </section> -->
+
+    <div class="my-profile-section-grid">
+        <section class="my-profile-card">
+            <header class="my-profile-card-heading"><span class="my-profile-heading-icon icon-blue"><i class="fas fa-id-card"></i></span><div><h2>Basic Employee Information</h2><p>Account and employment overview</p></div></header>
+            <dl class="my-profile-details">
+                <div><dt>Employee name</dt><dd>{{ user.get_full_name|default:user.username|default:"Not provided" }}</dd></div><div><dt>Employee ID</dt><dd>{{ employee.employee_id|default:"Not provided" }}</dd></div>
+                <div><dt>Designation</dt><dd>{{ employee.designation|default:"Not provided" }}</dd></div><div><dt>Department</dt><dd>{{ employee.department|default:"Not provided" }}</dd></div>
+                <div><dt>Email</dt><dd>{{ user.email|default:"Not provided" }}</dd></div><div><dt>Mobile number</dt><dd>{{ user.phone|default:"Not provided" }}</dd></div>
+                <div><dt>Employee status</dt><dd><span class="my-profile-inline-status {% if employee.is_active %}active{% else %}inactive{% endif %}">{% if employee.is_active %}Active{% else %}Inactive{% endif %}</span></dd></div>
+                <div><dt>Supervisor</dt><dd>{% if employee.supervisor %}{{ employee.supervisor.user.get_full_name|default:employee.supervisor.user.username }}{% else %}Not provided{% endif %}</dd></div>
+            </dl>
+        </section>
+
+        <!-- <section class="my-profile-card">
+            <header class="my-profile-card-heading"><span class="my-profile-heading-icon icon-purple"><i class="fas fa-calendar-check"></i></span><div><h2>Leave Information</h2><p>Current {{ current_year }} leave position</p></div></header>
+            <dl class="my-profile-details my-profile-leave-totals">
+                <div><dt>Current balance</dt><dd>{{ leave_balance }} day{{ leave_balance|pluralize }}</dd></div><div><dt>Total leave taken</dt><dd>{{ total_leave_taken }} day{{ total_leave_taken|pluralize }}</dd></div>
+                <div><dt>Pending requests</dt><dd>{{ pending_leave_requests }}</dd></div><div><dt>Entitlement method</dt><dd>{% if uses_custom_leave %}Custom entitlement{% else %}Leave type limits{% endif %}</dd></div>
+            </dl>
+            <div class="my-profile-balance-list"><h3>Leave type-wise balance</h3>
+                {% if leave_type_balances %}{% for item in leave_type_balances %}<div class="my-profile-balance-row"><div><strong>{{ item.name }}</strong><span>{{ item.used }} of {{ item.allowance }} days used</span></div><span class="my-profile-balance-pill">{{ item.balance }} left</span></div>{% endfor %}
+                {% elif uses_custom_leave %}<p class="my-profile-empty-note">Type-wise balances are not available because a custom leave entitlement is assigned.</p>{% else %}<p class="my-profile-empty-note">Not provided</p>{% endif %}
+            </div>
+        </section> -->
+
+        <section class="my-profile-card">
+            <header class="my-profile-card-heading"><span class="my-profile-heading-icon icon-amber"><i class="fas fa-fingerprint"></i></span><div><h2>Identification Information</h2><p>Government or organizational identity</p></div></header>
+            <dl class="my-profile-details"><div><dt>Identification number</dt><dd>{{ profile.identification_no|default:"Not provided" }}</dd></div><div><dt>Document type</dt><dd>Not provided</dd></div><div><dt>Nationality</dt><dd>{{ profile.nationality|default:"Not provided" }}</dd></div><div><dt>Date of birth</dt><dd>{{ profile.date_of_birth|date:"d F Y"|default:"Not provided" }}</dd></div></dl>
+        </section>
+
+        <section class="my-profile-card my-profile-salary-card">
+            <header class="my-profile-card-heading"><span class="my-profile-heading-icon icon-green"><i class="fas fa-money-check-dollar"></i></span><div><h2>Salary Information</h2><p><i class="fas fa-lock"></i> Private payroll information</p></div></header>
+            {% if latest_salary %}
+            <div class="my-profile-salary-highlight"><div><span>Net salary</span><strong>৳{{ latest_salary.net_salary|floatformat:2 }}</strong></div><span>{{ latest_salary.get_payment_method_display }}</span></div>
+            <dl class="my-profile-details"><div><dt>Basic salary</dt><dd>৳{{ latest_salary.basic_salary|floatformat:2 }}</dd></div><div><dt>Gross salary</dt><dd>৳{{ latest_salary.gross_salary|floatformat:2 }}</dd></div><div><dt>Total allowances</dt><dd>৳{{ total_allowances|floatformat:2 }}</dd></div><div><dt>Total deductions</dt><dd>৳{{ total_deductions|floatformat:2 }}</dd></div><div><dt>Payment method</dt><dd>{{ latest_salary.get_payment_method_display }}</dd></div><div><dt>Payment information</dt><dd>{{ payment_details|default:"Not provided" }}</dd></div></dl>
+            {% else %}<div class="my-profile-no-data"><i class="fas fa-wallet"></i><strong>Salary information</strong><span>Not provided</span></div>{% endif %}
+        </section>
+
+        <section class="my-profile-card">
+            <header class="my-profile-card-heading"><span class="my-profile-heading-icon icon-indigo"><i class="fas fa-briefcase"></i></span><div><h2>Job Information</h2><p>Role and service details</p></div></header>
+            <dl class="my-profile-details"><div><dt>Joining date</dt><dd>{{ employee.joining_date|date:"d F Y"|default:"Not provided" }}</dd></div><div><dt>Service length</dt><dd>{{ employee.service_length|default:"Not provided" }}</dd></div><div><dt>Employment type</dt><dd>Not provided</dd></div><div><dt>Role</dt><dd>{{ user.get_role_display|default:"Not provided" }}</dd></div></dl>
+            <div class="my-profile-long-text"><span>Job description</span><p>{{ profile.job_description|default:"Not provided"|linebreaksbr }}</p></div>
+        </section>
+
+        <section class="my-profile-card">
+            <header class="my-profile-card-heading"><span class="my-profile-heading-icon icon-rose"><i class="fas fa-location-dot"></i></span><div><h2>Address Information</h2><p>Current and permanent residence</p></div></header>
+            <div class="my-profile-address-grid"><div><span>Present address</span><p>{{ profile.present_address|default:"Not provided"|linebreaksbr }}</p></div><div><span>Permanent address</span><p>{{ profile.permanent_address|default:"Not provided"|linebreaksbr }}</p></div></div>
+        </section>
+    </div>
+</div>
+{% endblock %}

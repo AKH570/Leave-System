@@ -29,4 +29,7 @@ urlpatterns = [
     path('employees/<int:pk>/edit/', views.employee_admin_edit, name='employee_admin_edit'),
     path('employees/<int:pk>/update/', views.employee_admin_update, name='employee_admin_update'),
     path('employees/departments/quick-create/', views.department_quick_create, name='department_quick_create'),
+    path('salaries/', views.SalaryListView.as_view(), name='salary_list'),
+    path('salaries/add/', views.SalaryCreateView.as_view(), name='salary_add'),
+    path('salaries/<int:pk>/edit/', views.SalaryUpdateView.as_view(), name='salary_edit'),
 ]
