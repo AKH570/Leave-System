@@ -92,14 +92,14 @@ body {
     transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
-.sidebar ul li:not(.active) a:hover{
+.sidebar > ul > li:not(.active) > a:hover{
     color:#fff;
     border-left-color:#7fb3e8;
     background:rgba(255,255,255,0.12);
     box-shadow:0 8px 18px rgba(31,95,159,0.08);
 }
 
-.sidebar ul li.active a{
+.sidebar > ul > li.active > a{
     background:rgba(255,255,255,0.18);
     color:#fff;
     border-left-color:#2f80d1;
@@ -119,8 +119,8 @@ body {
     transition: color 0.2s ease;
 }
 
-.sidebar ul li a:hover i,
-.sidebar ul li.active a i{
+.sidebar > ul > li > a:hover i,
+.sidebar > ul > li.active > a i{
     color:#fff;
 }
 
@@ -1809,6 +1809,7 @@ body {
 
 .sidebar-menu-toggle:hover,
 .sidebar-menu-toggle:focus-visible,
+.sidebar-menu-group.active .sidebar-menu-toggle,
 .sidebar-menu-group.is-open .sidebar-menu-toggle {
     color: #fff;
     background: rgba(255, 255, 255, .1);

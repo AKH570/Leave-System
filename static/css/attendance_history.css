@@ -1,0 +1,84 @@
+.attendance-page {
+    color: #263238;
+}
+
+.attendance-heading {
+    font-weight: 800;
+    letter-spacing: -.03em;
+}
+
+.attendance-card {
+    border: 0;
+    border-radius: 16px;
+    box-shadow: 0 8px 28px rgba(31, 45, 61, .08);
+}
+
+.attendance-summary {
+    border-left: 4px solid var(--summary-color);
+}
+
+.attendance-summary i {
+    color: var(--summary-color);
+    font-size: 1.35rem;
+}
+
+.attendance-summary .summary-value {
+    font-size: 1.55rem;
+    font-weight: 800;
+}
+
+.status-badge {
+    border-radius: 999px;
+    display: inline-block;
+    font-size: .75rem;
+    font-weight: 700;
+    padding: .45rem .7rem;
+}
+
+.status-present {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.status-absent {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.status-late {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.status-halfday {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.attendance-table th {
+    color: #64748b;
+    font-size: .75rem;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.attendance-table td {
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.attendance-table td:last-child {
+    min-width: 180px;
+    white-space: normal;
+}
+
+.empty-state {
+    padding: 3.5rem 1rem;
+    text-align: center;
+}
+
+.empty-state i {
+    color: #94a3b8;
+    font-size: 2.5rem;
+}

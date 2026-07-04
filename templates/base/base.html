@@ -1,4 +1,4 @@
-{% load static %}
+{% load static navigation_tags %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -32,33 +32,40 @@
             </a>
         </div>
 
-        <ul>
+        {% url_name_active request 'dashboard' 'adm_dashboard' 'emp_dashboard' as dashboard_active %}
+        {% url_name_active request 'employee_list' 'employee_detail' 'employee_admin_edit' 'employee_admin_update' as employees_active %}
+        {% url_name_active request 'salary_list' 'salary_add' 'salary_edit' as salary_active %}
+        {% url_name_active request 'department_list' 'department_add' 'department_edit' 'department_delete' as departments_active %}
+        {% url_name_active request 'designation_list' 'designation_add' 'designation_edit' 'designation_delete' as designations_active %}
+        {% url_name_active request 'leave_type_list' 'leave_type_add' 'leave_type_edit' 'leave_type_delete' as leave_settings_active %}
+        {% url_name_active request 'leave_apply' as leave_apply_active %}
+        {% url_name_active request 'attendance_history' as attendance_active %}
 
-            {% with current_url=request.resolver_match.url_name %}
-            <li{% if current_url == 'dashboard' or current_url == 'adm_dashboard' or current_url == 'emp_dashboard' %} class="active"{% endif %}>
+        <ul>
+            <li{% if dashboard_active %} class="active"{% endif %}>
                 <a href="{% url 'dashboard' %}">
                     <i class="fas fa-home"></i>
                     Dashboard
                 </a>
             </li>
              {% if user.is_superuser or user.is_staff or user.role == 'ADMIN' %}
-            <li{% if current_url == 'employee_list' or current_url == 'employee_detail' or current_url == 'employee_admin_edit' or current_url == 'employee_admin_update' %} class="active"{% endif %}>
+            <li{% if employees_active %} class="active"{% endif %}>
                 <a href="{% url 'employee_list' %}">
                     <i class="fas fa-users" role="img" aria-label="Employees"></i>
                     Employees
                 </a>
             </li>
-            <li{% if current_url == 'salary_list' or current_url == 'salary_add' or current_url == 'salary_edit' %} class="active"{% endif %}>
+            <li{% if salary_active %} class="active"{% endif %}>
                 <a href="{% url 'salary_list' %}">
                     <i class="fas fa-money-check-dollar" role="img" aria-label="Salary"></i>
                     Salary
                 </a>
             </li>
-            <li class="sidebar-menu-group{% if current_url == 'department_list' or current_url == 'department_add' or current_url == 'department_edit' or current_url == 'department_delete' or current_url == 'designation_list' or current_url == 'designation_add' or current_url == 'designation_edit' or current_url == 'designation_delete' or current_url == 'leave_type_list' or current_url == 'leave_type_add' or current_url == 'leave_type_edit' or current_url == 'leave_type_delete' %} is-open{% endif %}">
+            <li class="sidebar-menu-group{% if departments_active or designations_active or leave_settings_active %} active is-open{% endif %}">
                 <button
                     type="button"
                     class="sidebar-menu-toggle"
-                    aria-expanded="{% if current_url == 'department_list' or current_url == 'department_add' or current_url == 'department_edit' or current_url == 'department_delete' or current_url == 'designation_list' or current_url == 'designation_add' or current_url == 'designation_edit' or current_url == 'designation_delete' or current_url == 'leave_type_list' or current_url == 'leave_type_add' or current_url == 'leave_type_edit' or current_url == 'leave_type_delete' %}true{% else %}false{% endif %}"
+                    aria-expanded="{% if departments_active or designations_active or leave_settings_active %}true{% else %}false{% endif %}"
                     aria-controls="settingsSubmenu"
                 >
                     <span>
@@ -69,19 +76,19 @@
                 </button>
                 <ul class="sidebar-submenu" id="settingsSubmenu">
                     <li>
-                        <a href="{% url 'department_list' %}" class="{% if current_url == 'department_list' or current_url == 'department_add' or current_url == 'department_edit' or current_url == 'department_delete' %}active{% endif %}">
+                        <a href="{% url 'department_list' %}"{% if departments_active %} class="active"{% endif %}>
                             <i class="fas fa-building"></i>
                             Departments
                         </a>
                     </li>
                     <li>
-                        <a href="{% url 'designation_list' %}" class="{% if current_url == 'designation_list' or current_url == 'designation_add' or current_url == 'designation_edit' or current_url == 'designation_delete' %}active{% endif %}">
+                        <a href="{% url 'designation_list' %}"{% if designations_active %} class="active"{% endif %}>
                             <i class="fas fa-id-card"></i>
                             Designations
                         </a>
                     </li>
                     <li>
-                        <a href="{% url 'leave_type_list' %}" class="{% if current_url == 'leave_type_list' or current_url == 'leave_type_add' or current_url == 'leave_type_edit' or current_url == 'leave_type_delete' %}active{% endif %}">
+                        <a href="{% url 'leave_type_list' %}"{% if leave_settings_active %} class="active"{% endif %}>
                             <i class="fas fa-calendar-check"></i>
                             Leave Settings
                         </a>
@@ -89,22 +96,19 @@
                 </ul>
             </li>
             {% else %}
-
-            <li>
+            <li{% if attendance_active %} class="active"{% endif %}>
+                <a href="{% url 'attendance_history' %}">
+                    <i class="fas fa-history"></i>
+                    My Attendance
+                </a>
+            </li>
+            <li{% if leave_apply_active %} class="active"{% endif %}>
                 <a href="{% url 'leave_apply' %}">
                     <i class="fas fa-calendar-plus"></i>
                     Apply Leave
                 </a>
             </li>
-
-            <li>
-                <a href="{% url 'leave_history' %}">
-                    <i class="fas fa-history"></i>
-                    My Leaves
-                </a>
-            </li>
             {% endif %}
-            {% endwith %}
             <li>
                 <a href="{% url 'accounts:logout' %}">
                     <i class="fas fa-sign-out-alt"></i>
