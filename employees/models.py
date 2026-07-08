@@ -700,3 +700,7 @@ class LeaveRequest(models.Model):
 
     class Meta:
         ordering = ['-applied_at']
+        indexes = [
+            models.Index(fields=['status', 'from_date'], name='leave_status_from_idx'),
+            models.Index(fields=['from_date', 'to_date'], name='leave_period_idx'),
+        ]

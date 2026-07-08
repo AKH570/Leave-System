@@ -11,8 +11,11 @@ def current_profile_picture(request):
     if user and user.is_authenticated:
         try:
             employee = Employee.objects.select_related('extended_profile').get(user=user)
-            profile, _ = EmpProfile.objects.get_or_create(employee=employee)
-            if profile.profile_picture:
+            try:
+                profile = employee.extended_profile
+            except EmpProfile.DoesNotExist:
+                profile = None
+            if profile and profile.profile_picture:
                 profile_picture_url = profile.profile_picture.url
         except Employee.DoesNotExist:
             pass

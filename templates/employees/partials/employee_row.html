@@ -39,6 +39,20 @@
             {% if employee.is_active %}Active{% else %}Inactive{% endif %}
         </span>
     </td>
+    <td>
+        {% if employee.today_login_time %}
+            <span class="employee-status employee-status--active"><span aria-hidden="true"></span>Present</span>
+        {% else %}
+            <span class="employee-status employee-status--inactive"><span aria-hidden="true"></span>Absent</span>
+        {% endif %}
+    </td>
+    <td>
+        {% if employee.today_login_time %}
+            {{ employee.today_login_time|time:"h:i A" }}
+        {% else %}
+            <span class="employee-muted">Not logged in</span>
+        {% endif %}
+    </td>
     <td class="employee-view-column">
         <div class="employee-action-group">
             <a

@@ -1,10 +1,11 @@
 import csv
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
+from django.db.models import Count, Q
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.views.generic import TemplateView
@@ -115,17 +116,25 @@ class AttendanceHistoryView(LoginRequiredMixin, UserPassesTestMixin, TemplateVie
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         filtered_records = self.object_list
-        records_for_summary = list(filtered_records)
         paginator = Paginator(filtered_records, 15)
         page_obj = paginator.get_page(self.request.GET.get('page'))
 
-        total_seconds = sum(
-            (
-                record.working_duration.total_seconds()
-                if record.working_duration else 0
-            )
-            for record in records_for_summary
+        status_totals = filtered_records.aggregate(
+            total_present=Count('pk', filter=Q(status='PRESENT')),
+            total_absent=Count('pk', filter=Q(status='ABSENT')),
+            total_late=Count('pk', filter=Q(status='LATE')),
         )
+        total_seconds = 0
+        for record_date, check_in, check_out in filtered_records.values_list(
+            'date', 'check_in', 'check_out',
+        ).iterator():
+            if not check_in or not check_out:
+                continue
+            start = datetime.combine(record_date, check_in)
+            end = datetime.combine(record_date, check_out)
+            if end < start:
+                end += timedelta(days=1)
+            total_seconds += (end - start).total_seconds()
         total_minutes = int(total_seconds // 60)
         hours, minutes = divmod(total_minutes, 60)
 
@@ -136,9 +145,7 @@ class AttendanceHistoryView(LoginRequiredMixin, UserPassesTestMixin, TemplateVie
             'employee': self.employee,
             'page_obj': page_obj,
             'attendances': page_obj.object_list,
-            'total_present': sum(r.status == 'PRESENT' for r in records_for_summary),
-            'total_absent': sum(r.status == 'ABSENT' for r in records_for_summary),
-            'total_late': sum(r.status == 'LATE' for r in records_for_summary),
+            **status_totals,
             'total_working_hours': f'{hours}h {minutes:02d}m',
             'filter_query': query_params.urlencode(),
             'selected_month': self.request.GET.get('month', ''),

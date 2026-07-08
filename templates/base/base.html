@@ -40,6 +40,7 @@
         {% url_name_active request 'leave_type_list' 'leave_type_add' 'leave_type_edit' 'leave_type_delete' as leave_settings_active %}
         {% url_name_active request 'leave_apply' as leave_apply_active %}
         {% url_name_active request 'attendance_history' as attendance_active %}
+        {% url_name_active request 'leave_report' 'attendance_report' as reports_active %}
 
         <ul>
             <li{% if dashboard_active %} class="active"{% endif %}>
@@ -60,6 +61,16 @@
                     <i class="fas fa-money-check-dollar" role="img" aria-label="Salary"></i>
                     Salary
                 </a>
+            </li>
+            <li class="sidebar-menu-group{% if reports_active %} active is-open{% endif %}">
+                <button type="button" class="sidebar-menu-toggle" aria-expanded="{% if reports_active %}true{% else %}false{% endif %}" aria-controls="reportsSubmenu">
+                    <span><i class="fas fa-chart-column" aria-hidden="true"></i> Reports</span>
+                    <i class="fas fa-chevron-down sidebar-menu-chevron" aria-hidden="true"></i>
+                </button>
+                <ul class="sidebar-submenu" id="reportsSubmenu">
+                    <li><a href="{% url 'leave_report' %}"{% if request.resolver_match.url_name == 'leave_report' %} class="active"{% endif %}><i class="fas fa-calendar-check"></i> Leave Report</a></li>
+                    <li><a href="{% url 'attendance_report' %}"{% if request.resolver_match.url_name == 'attendance_report' %} class="active"{% endif %}><i class="fas fa-clock"></i> Attendance Report</a></li>
+                </ul>
             </li>
             <li class="sidebar-menu-group{% if departments_active or designations_active or leave_settings_active %} active is-open{% endif %}">
                 <button
@@ -276,15 +287,14 @@
     {% block extra_js %}{% endblock %}
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const settingsGroup = document.querySelector('.sidebar-menu-group');
-            const settingsToggle = settingsGroup ? settingsGroup.querySelector('.sidebar-menu-toggle') : null;
-
-            if (settingsGroup && settingsToggle) {
-                settingsToggle.addEventListener('click', function () {
-                    const isOpen = settingsGroup.classList.toggle('is-open');
-                    settingsToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            document.querySelectorAll('.sidebar-menu-group').forEach(function (menuGroup) {
+                const menuToggle = menuGroup.querySelector('.sidebar-menu-toggle');
+                if (!menuToggle) return;
+                menuToggle.addEventListener('click', function () {
+                    const isOpen = menuGroup.classList.toggle('is-open');
+                    menuToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
                 });
-            }
+            });
 
             const notificationTrigger = document.getElementById('notificationDropdown');
             const notificationMenu = document.getElementById('notificationMenu');

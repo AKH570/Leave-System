@@ -46,6 +46,10 @@ class Attendance(models.Model):
 
     class Meta:
         unique_together = ('employee', 'date')
+        indexes = [
+            models.Index(fields=['date'], name='attendance_date_idx'),
+            models.Index(fields=['status', 'date'], name='attendance_status_date_idx'),
+        ]
 
     @property
     def working_duration(self):

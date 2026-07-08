@@ -5,7 +5,9 @@ from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db.models.deletion import ProtectedError
+from django.db import connection
 from django.test import TestCase
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
 from departments.models import Department
@@ -22,6 +24,37 @@ from .models import (
 
 
 User = get_user_model()
+
+
+class EmployeeListPerformanceTests(TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_user(
+            username='performance-admin', password='test-password', role='ADMIN',
+        )
+        LeaveType.objects.create(name=LeaveType.CASUAL, yearly_limit=12)
+
+    def create_employee(self, number):
+        user = User.objects.create_user(
+            username=f'performance-employee-{number}',
+            password='test-password',
+        )
+        return Employee.objects.create(user=user)
+
+    def response_query_count(self):
+        with CaptureQueriesContext(connection) as queries:
+            response = self.client.get(reverse('employee_list'))
+            self.assertEqual(response.status_code, 200)
+        return len(queries)
+
+    def test_employee_list_query_count_does_not_grow_per_employee(self):
+        """Protect the directory from reintroducing per-row leave queries."""
+        self.client.force_login(self.admin)
+        self.create_employee(1)
+        baseline = self.response_query_count()
+        for number in range(2, 7):
+            self.create_employee(number)
+
+        self.assertEqual(self.response_query_count(), baseline)
 
 
 class CustomLeaveTests(TestCase):

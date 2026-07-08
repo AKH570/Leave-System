@@ -672,12 +672,20 @@ class EmployeeListView(LoginRequiredMixin, AdminAccessMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         all_employees = Employee.objects.all()
+        standard_allowance = LeaveType.objects.aggregate(
+            total=Sum('yearly_limit'),
+        )['total'] or 0
         for employee in context['employees']:
-            leave_summary = employee.get_leave_summary(timezone.now().year)
-            employee.yearly_leave_allowance = leave_summary['allowance']
-            employee.used_leave_days = leave_summary['used']
-            employee.leave_balance = leave_summary['balance']
-            employee.uses_custom_leave = leave_summary['uses_custom_leave']
+            employee.uses_custom_leave = employee.custom_leave is not None
+            employee.yearly_leave_allowance = (
+                employee.custom_leave
+                if employee.uses_custom_leave else standard_allowance
+            )
+            employee.leave_balance = (
+                employee.custom_leave
+                if employee.uses_custom_leave
+                else max(standard_allowance - employee.used_leave_days, 0)
+            )
 
         context.update({
             'total_employees': all_employees.count(),

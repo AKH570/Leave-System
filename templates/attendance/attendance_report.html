@@ -1,0 +1,28 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/reports.css' %}">{% endblock %}
+{% block content %}
+<div class="report-page py-3">
+  <div class="report-heading d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div><h1 class="h3 mb-1">Attendance Report</h1><p class="text-secondary mb-0">Review attendance activity across the organisation.</p></div>
+    <div class="d-flex gap-2"><a class="btn btn-outline-primary" href="{% url 'leave_report' %}"><i class="fas fa-calendar-check me-2"></i>Leave Report</a><a class="btn btn-success" href="?{% if filter_query %}{{ filter_query }}&amp;{% endif %}export=csv"><i class="fas fa-file-csv me-2"></i>Export CSV</a></div>
+  </div>
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3"><div class="card report-stat"><div class="card-body"><span>Total Records</span><strong>{{ total_records }}</strong></div></div></div>
+    <div class="col-6 col-xl-3"><div class="card report-stat"><div class="card-body"><span>Present</span><strong>{{ present_count }}</strong></div></div></div>
+    <div class="col-6 col-xl-3"><div class="card report-stat"><div class="card-body"><span>Absent</span><strong>{{ absent_count }}</strong></div></div></div>
+    <div class="col-6 col-xl-3"><div class="card report-stat"><div class="card-body"><span>Late</span><strong>{{ late_count }}</strong></div></div></div>
+  </div>
+  <div class="card report-card mb-4"><div class="card-body"><form method="get" class="row g-3 align-items-end">
+    <div class="col-md-4 col-xl"><label class="form-label" for="fromDate">From</label><input class="form-control" id="fromDate" type="date" name="from_date" value="{{ from_date }}"></div>
+    <div class="col-md-4 col-xl"><label class="form-label" for="toDate">To</label><input class="form-control" id="toDate" type="date" name="to_date" value="{{ to_date }}"></div>
+    <div class="col-md-4 col-xl"><label class="form-label" for="employee">Employee</label><select class="form-select" id="employee" name="employee"><option value="">All employees</option>{% for employee in employees %}<option value="{{ employee.pk }}"{% if selected_employee == employee.pk|stringformat:'s' %} selected{% endif %}>{{ employee.employee_id }} - {{ employee.user.get_full_name|default:employee.user.username }}</option>{% endfor %}</select></div>
+    <div class="col-md-4 col-xl"><label class="form-label" for="department">Department</label><select class="form-select" id="department" name="department"><option value="">All departments</option>{% for department in departments %}<option value="{{ department.pk }}"{% if selected_department == department.pk|stringformat:'s' %} selected{% endif %}>{{ department.name }}</option>{% endfor %}</select></div>
+    <div class="col-md-4 col-xl"><label class="form-label" for="status">Status</label><select class="form-select" id="status" name="status"><option value="">All statuses</option>{% for value,label in status_choices %}<option value="{{ value }}"{% if selected_status == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+    <div class="col-md-8 col-xl-auto d-flex gap-2"><a class="btn btn-outline-secondary" href="{% url 'attendance_report' %}">Clear</a><button class="btn btn-primary" type="submit"><i class="fas fa-filter me-2"></i>Apply</button></div>
+  </form></div></div>
+  <div class="card report-card overflow-hidden"><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>Date</th><th>Employee</th><th>Department</th><th>Check In</th><th>Check Out</th><th>Hours</th><th>Status</th><th>Remarks</th></tr></thead><tbody>
+    {% for record in page_obj %}<tr><td class="fw-semibold">{{ record.date|date:'d M Y' }}</td><td><strong>{{ record.employee.user.get_full_name|default:record.employee.user.username }}</strong><small>{{ record.employee.employee_id }}</small></td><td>{{ record.employee.department|default:'—' }}</td><td>{{ record.check_in|time:'h:i A'|default:'—' }}</td><td>{{ record.check_out|time:'h:i A'|default:'—' }}</td><td>{{ record.working_hours_display }}</td><td><span class="report-status status-{{ record.status|lower }}">{{ record.get_status_display }}</span></td><td>{{ record.remarks|default:'—' }}</td></tr>{% empty %}<tr><td colspan="8" class="text-center py-5 text-secondary">No attendance records match these filters.</td></tr>{% endfor %}
+  </tbody></table></div>{% include 'reports/pagination.html' %}</div>
+</div>
+{% endblock %}

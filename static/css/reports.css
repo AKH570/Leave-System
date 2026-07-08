@@ -1,0 +1,15 @@
+.report-page { color: #172033; }
+.report-stat, .report-card { border: 1px solid #e7eaf0; border-radius: 12px; box-shadow: 0 4px 18px rgba(23,32,51,.05); }
+.report-stat .card-body { display: flex; flex-direction: column; gap: .3rem; }
+.report-stat span { color: #6b7280; font-size: .84rem; font-weight: 600; }
+.report-stat strong { font-size: 1.75rem; line-height: 1; }
+.report-card thead th { background: #f7f8fb; color: #596174; border-bottom: 1px solid #e7eaf0; font-size: .78rem; letter-spacing: .035em; padding: .9rem 1rem; text-transform: uppercase; white-space: nowrap; }
+.report-card tbody td { padding: .9rem 1rem; vertical-align: middle; }
+.report-card td small { color: #7a8292; display: block; font-size: .75rem; margin-top: .15rem; }
+.report-reason { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.report-status { border-radius: 999px; display: inline-block; font-size: .75rem; font-weight: 700; padding: .3rem .65rem; }
+.status-approved, .status-present { background: #dcfce7; color: #16733b; }
+.status-pending, .status-late { background: #fef3c7; color: #92400e; }
+.status-rejected, .status-absent { background: #fee2e2; color: #991b1b; }
+.status-cancelled, .status-half_day { background: #e5e7eb; color: #4b5563; }
+@media print { .sidebar, .dashboard-navbar, form, .report-heading .btn, .pagination { display: none !important; } .content-wrapper { margin: 0 !important; } .report-card, .report-stat { box-shadow: none; } }

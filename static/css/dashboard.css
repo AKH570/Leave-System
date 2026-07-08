@@ -1787,9 +1787,9 @@ body {
     border: 0;
     border-radius: 10px;
     color: rgba(255, 255, 255, .78);
-    font: inherit;
-    font-size: .9rem;
-    font-weight: 800;
+    font-family: "Open Sans", sans-serif;
+    font-size: 16px;
+    font-weight: 400;
     text-align: left;
     background: transparent;
     cursor: pointer;
@@ -1852,6 +1852,7 @@ body {
     padding: 9px 12px 9px 34px;
     border-radius: 9px;
     color: rgba(255, 255, 255, .68);
+    font-family: "Open Sans", sans-serif;
     font-size: .86rem;
     font-weight: 700;
     text-decoration: none;

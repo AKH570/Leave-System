@@ -69,7 +69,7 @@ class EmployeeLoginAttendanceTests(TestCase):
 
         response = self.client.get(reverse('employee_list'))
 
-        self.assertEqual(response.status_code, 403)
+        self.assertRedirects(response, reverse('dashboard'))
 
 
 class AttendanceHistoryTests(TestCase):
