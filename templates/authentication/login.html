@@ -8,8 +8,20 @@
     <div class="login-page">
         <span class="login-shape login-shape--one" aria-hidden="true"></span>
         <span class="login-shape login-shape--two" aria-hidden="true"></span>
-        <main class="login-panel">
-            <div class="login-card">
+        <main class="login-layout container">
+            <section class="branch-information d-flex align-items-center" aria-labelledby="company-name">
+                <div class="branch-information__logo-wrap d-flex align-items-center justify-content-center">
+                    <img src="{% static 'images/lazzlogo.png' %}" alt="Lazz Pharma logo" class="branch-information__logo">
+                </div>
+                <span class="branch-information__divider" aria-hidden="true"></span>
+                <div class="branch-information__content">
+                    <h2 id="company-name" class="branch-information__title">LAZZ PHARMA</h2>
+                    <p class="branch-information__subtitle">60 Feet Road Branch, Munipur, Mirpur-1, Dhaka</p>
+                </div>
+            </section>
+
+            <section class="login-panel" aria-label="Sign in">
+                <div class="login-card">
                 <div class="login-brand">
                     <img src="{% static 'images/leavebox-logo.png' %}" alt="LeaveBox — your easy leave solution" class="login-logo">
                     <span class="login-brand-divider" aria-hidden="true"></span>
@@ -52,7 +64,8 @@
                 <div class="login-footer">
                     <p>New to the system? <a href="{% url 'accounts:register' %}">Create an account</a></p>
                 </div>
-            </div>
+                </div>
+            </section>
         </main>
     </div>
 {% endblock %}

@@ -67,11 +67,82 @@ body {
     background: rgba(0, 184, 148, .11);
 }
 
-.login-panel {
+.login-layout {
     position: relative;
     z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: clamp(48px, 8vw, 120px);
+    width: 100%;
+    max-width: 1140px;
+}
+
+.branch-information {
+    flex: 1 1 0;
+    color: var(--login-primary);
+    animation: branch-fade-slide .7s ease-out both;
+}
+
+.branch-information__logo-wrap {
+    flex: 0 0 90px;
+    width: 90px;
+    height: 90px;
+    padding: 15px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 10px 25px rgba(31, 41, 55, .1);
+}
+
+.branch-information__logo {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.branch-information__divider {
+    flex: 0 0 2px;
+    width: 2px;
+    height: 70px;
+    margin: 0 20px;
+    background: #9ca3af;
+    box-shadow: 0 0 4px rgba(107, 114, 128, .18);
+}
+
+.branch-information__title {
+    margin: 0 0 7px;
+    color: var(--login-primary);
+    font-size: clamp(2.125rem, 3vw, 2.5rem);
+    font-weight: 800;
+    letter-spacing: 1px;
+    line-height: 1.1;
+}
+
+.branch-information__subtitle {
+    margin: 0;
+    color: #e3263a;
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.45;
+}
+
+.login-panel {
+    flex: 0 1 460px;
     width: 100%;
     max-width: 460px;
+    animation: panel-fade-in .65s .12s ease-out both;
+}
+
+@keyframes branch-fade-slide {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes panel-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 .login-card {
@@ -265,6 +336,67 @@ body {
     background: #fff1f2;
 }
 
+@media (max-width: 991.98px) {
+    .login-layout { gap: 36px; }
+
+    .branch-information__logo-wrap {
+        flex-basis: 70px;
+        width: 70px;
+        height: 70px;
+        padding: 11px;
+    }
+
+    .branch-information__divider {
+        height: 56px;
+        margin-right: 15px;
+        margin-left: 15px;
+    }
+
+    .branch-information__title {
+        font-size: clamp(1.65rem, 3vw, 2rem);
+    }
+
+    .branch-information__subtitle {
+        font-size: .9rem;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .login-page {
+        align-items: flex-start;
+        padding-top: 32px;
+        padding-bottom: 32px;
+    }
+
+    .login-layout {
+        flex-direction: column;
+        gap: 28px;
+    }
+
+    .branch-information {
+        flex: none;
+        flex-direction: column;
+        justify-content: center;
+        width: 100%;
+        text-align: center;
+    }
+
+    .branch-information__logo-wrap {
+        flex-basis: 70px;
+        margin-bottom: 16px;
+    }
+
+    .branch-information__divider {
+        display: none;
+    }
+
+    .branch-information__title {
+        font-size: clamp(1.8rem, 7vw, 2.125rem);
+    }
+
+    .login-panel { flex-basis: auto; }
+}
+
 @media (max-width: 575.98px) {
     .login-page {
         align-items: flex-start;
@@ -279,6 +411,7 @@ body {
     .login-logo {
         width: min(225px, 82%);
     }
+
 }
 
 @media (max-width: 359.98px) {
@@ -289,6 +422,11 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+    .branch-information,
+    .login-panel {
+        animation: none;
+    }
+
     .login-form .form-control,
     .btn-login {
         transition: none;
