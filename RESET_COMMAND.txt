@@ -1,0 +1,70 @@
+I want to reset the project database before starting UAT from the beginning.
+
+Please implement a safe Django management command to remove all application data from every model in the project.
+
+Requirements:
+
+1. Create a custom management command, for example:
+
+```bash
+python manage.py reset_uat_data
+```
+
+2. Delete all records from all project application models.
+
+3. Do not delete Django migration history from the `django_migrations` table.
+
+4. Preserve required system tables such as:
+
+   * Django migrations
+   * Content types
+   * Permissions
+   * Sessions, unless clearing sessions is necessary
+
+5. Preserve the admin superuser so I can log in after the reset.
+
+6. Delete data in the correct order to avoid foreign-key constraint errors.
+
+7. Reset database auto-increment sequences so new records start from the initial ID where supported.
+
+8. Use Django ORM and database transactions.
+
+9. Before deleting anything, display a strong warning and require confirmation:
+
+```text
+This will permanently delete all UAT application data.
+Type RESET to continue:
+```
+
+10. If the user does not enter exactly `RESET`, cancel the operation.
+
+11. Add an optional `--no-input` argument for automated environments:
+
+```bash
+python manage.py reset_uat_data --no-input
+```
+
+12. Display a summary showing:
+
+* Model name
+* Number of deleted records
+* Any model skipped
+* Whether the operation completed successfully
+
+13. Exclude static configuration data only if it is essential for the application to run. Clearly list any models that are preserved.
+
+14. Add proper exception handling. If any deletion fails, roll back the complete transaction.
+
+15. Do not delete uploaded media files unless a separate `--delete-media` option is provided.
+
+16. Add the optional command:
+
+```bash
+python manage.py reset_uat_data --delete-media
+```
+
+This option should remove uploaded files from the project media directory after the database cleanup.
+
+17. Add clear comments and documentation explaining how to run the command safely.
+
+Please first inspect all installed apps and model relationships, then generate the complete management command with the correct file path, Python code, and usage instructions.
