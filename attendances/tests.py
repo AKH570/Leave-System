@@ -1,4 +1,5 @@
 from datetime import time, timedelta
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -42,6 +43,58 @@ class EmployeeLoginAttendanceTests(TestCase):
         })
         attendance.refresh_from_db()
         self.assertEqual(attendance.check_in, first_login_time)
+
+    def test_explicit_logout_records_latest_checkout_without_changing_checkin(self):
+        with patch('attendances.services._local_time', return_value=time(9, 2)):
+            self.client.post(reverse('accounts:login'), {
+                'username': self.user.username,
+                'password': 'test-password',
+            })
+        with patch('attendances.services._local_time', return_value=time(13, 15)):
+            self.client.get(reverse('accounts:logout'))
+
+        with patch('attendances.services._local_time', return_value=time(13, 45)):
+            self.client.post(reverse('accounts:login'), {
+                'username': self.user.username,
+                'password': 'test-password',
+            })
+        with patch('attendances.services._local_time', return_value=time(18, 8)):
+            self.client.get(reverse('accounts:logout'))
+
+        attendance = Attendance.objects.get(employee=self.employee, date=timezone.localdate())
+        self.assertEqual(attendance.check_in, time(9, 2))
+        self.assertEqual(attendance.check_out, time(18, 8))
+
+    def test_logout_without_attendance_still_logs_user_out(self):
+        self.client.force_login(self.user)
+        # force_login emits user_logged_in, so remove that generated record to
+        # exercise the missing-attendance edge case specifically.
+        Attendance.objects.all().delete()
+        response = self.client.get(reverse('accounts:logout'))
+
+        self.assertRedirects(response, reverse('accounts:login'))
+        self.assertNotIn('_auth_user_id', self.client.session)
+        self.assertFalse(Attendance.objects.exists())
+
+    def test_admin_logout_does_not_create_attendance(self):
+        admin = User.objects.create_superuser(
+            username='checkout-admin',
+            password='test-password',
+        )
+        self.client.force_login(admin)
+
+        self.client.get(reverse('accounts:logout'))
+
+        self.assertFalse(Attendance.objects.filter(employee__user=admin).exists())
+
+    @patch('attendances.services.record_check_out', side_effect=RuntimeError('database unavailable'))
+    def test_checkout_failure_does_not_prevent_logout(self, mocked_checkout):
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('accounts:logout'))
+
+        self.assertRedirects(response, reverse('accounts:login'))
+        self.assertNotIn('_auth_user_id', self.client.session)
 
     def test_employee_list_shows_only_todays_login_to_admin(self):
         Attendance.objects.create(

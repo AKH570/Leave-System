@@ -154,10 +154,11 @@
         <nav class="navbar navbar-expand-lg navbar-light dashboard-navbar mb-2">
             <div class="container-fluid">
                 <div class="dashboard-profile-slot">
-                    <div class="dashboard-navbar-date" aria-label="Current date">
+                    <div class="dashboard-navbar-date" aria-label="Current date and system time">
                         <i class="fas fa-calendar-day" aria-hidden="true"></i>
                         <span class="dashboard-navbar-date-full">{% now "l, d F Y" %}</span>
                         <span class="dashboard-navbar-date-short">{% now "d M Y" %}</span>
+                        <time class="dashboard-navbar-time" id="dashboardSystemTime" aria-label="Current system time"></time>
                     </div>
                     <div class="dashboard-notification-dropdown">
                         <button class="dashboard-notification-button" type="button" id="notificationDropdown" aria-label="Notifications{% if pending_leave_count %}: {{ pending_leave_count }} pending leave request{{ pending_leave_count|pluralize }}{% endif %}" aria-haspopup="true" aria-expanded="false">
@@ -457,6 +458,27 @@
                 });
             }
         });
+    </script>
+    <script>
+        (function () {
+            const clock = document.getElementById('dashboardSystemTime');
+            if (!clock) return;
+
+            const formatter = new Intl.DateTimeFormat(undefined, {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+            });
+
+            function updateSystemTime() {
+                const now = new Date();
+                clock.textContent = formatter.format(now);
+                clock.dateTime = now.toISOString();
+            }
+
+            updateSystemTime();
+            window.setInterval(updateSystemTime, 1000);
+        }());
     </script>
 
 </body>

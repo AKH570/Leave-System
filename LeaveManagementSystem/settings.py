@@ -119,7 +119,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+# Attendance times are stored/displayed in the organisation's local timezone.
+TIME_ZONE = 'Asia/Dhaka'
 
 USE_I18N = True
 

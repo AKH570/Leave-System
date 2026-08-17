@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import Group, Permission
@@ -16,6 +18,9 @@ from .rbac import audit
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+
+
+logger = logging.getLogger(__name__)
 
 
 def login_view(request):
@@ -42,6 +47,13 @@ def login_view(request):
 
 def logout_view(request):
     expired = request.GET.get('expired') == '1'
+    user = request.user
+    try:
+        from attendances.services import record_check_out
+        record_check_out(user)
+    except Exception:
+        # Attendance persistence must never prevent the user from logging out.
+        logger.exception('Unable to record attendance checkout for user %s', user.pk)
     logout(request)
     if expired:
         messages.warning(
