@@ -1,7 +1,8 @@
 import csv
 from datetime import datetime
 
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db.models import Count, Sum
 from django.http import HttpResponse
@@ -12,16 +13,10 @@ from departments.models import Department
 from employees.models import Employee, LeaveRequest, LeaveType
 
 
-class AdminReportMixin(LoginRequiredMixin, UserPassesTestMixin):
+class AdminReportMixin(LoginRequiredMixin, PermissionRequiredMixin):
     raise_exception = True
+    permission_required = 'accounts.view_reports'
     paginate_by = 20
-
-    def test_func(self):
-        user = self.request.user
-        return user.is_authenticated and (
-            user.is_superuser or user.is_staff
-            or getattr(user, 'role', '') == 'ADMIN'
-        )
 
     @staticmethod
     def parse_date(value):
@@ -36,6 +31,8 @@ class AdminReportMixin(LoginRequiredMixin, UserPassesTestMixin):
         return "'" + text if text.startswith(('=', '+', '-', '@')) else text
 
     def csv_response(self, filename, headers, rows):
+        if not self.request.user.has_perm('accounts.export_reports'):
+            raise PermissionDenied
         response = HttpResponse(content_type='text/csv; charset=utf-8')
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         response.write('\ufeff')

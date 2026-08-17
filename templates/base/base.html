@@ -19,6 +19,7 @@
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <link rel="stylesheet" href="{% static 'css/apply_leave.css' %}">
     <link rel="stylesheet" href="{% static 'css/footer.css' %}">
+    <link rel="stylesheet" href="{% static 'css/session-timeout.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -49,19 +50,24 @@
                     Dashboard
                 </a>
             </li>
-             {% if user.is_superuser or user.is_staff or user.role == 'ADMIN' %}
+             {% if perms.employees.view_employee or perms.employees.view_empsalary or perms.accounts.view_reports or perms.accounts.access_settings %}
+            {% if perms.employees.view_employee %}
             <li{% if employees_active %} class="active"{% endif %}>
                 <a href="{% url 'employee_list' %}">
                     <i class="fas fa-users" role="img" aria-label="Employees"></i>
                     Employees
                 </a>
             </li>
+            {% endif %}
+            {% if perms.employees.view_empsalary %}
             <li{% if salary_active %} class="active"{% endif %}>
                 <a href="{% url 'salary_list' %}">
                     <i class="fas fa-money-check-dollar" role="img" aria-label="Salary"></i>
                     Salary
                 </a>
             </li>
+            {% endif %}
+            {% if perms.accounts.view_reports %}
             <li class="sidebar-menu-group{% if reports_active %} active is-open{% endif %}">
                 <button type="button" class="sidebar-menu-toggle" aria-expanded="{% if reports_active %}true{% else %}false{% endif %}" aria-controls="reportsSubmenu">
                     <span><i class="fas fa-chart-column" aria-hidden="true"></i> Reports</span>
@@ -72,6 +78,8 @@
                     <li><a href="{% url 'attendance_report' %}"{% if request.resolver_match.url_name == 'attendance_report' %} class="active"{% endif %}><i class="fas fa-clock"></i> Attendance Report</a></li>
                 </ul>
             </li>
+            {% endif %}
+            {% if perms.accounts.access_settings %}
             <li class="sidebar-menu-group{% if departments_active or designations_active or leave_settings_active %} active is-open{% endif %}">
                 <button
                     type="button"
@@ -86,26 +94,36 @@
                     <i class="fas fa-chevron-down sidebar-menu-chevron" aria-hidden="true"></i>
                 </button>
                 <ul class="sidebar-submenu" id="settingsSubmenu">
+                    {% if perms.departments.view_department %}
                     <li>
                         <a href="{% url 'department_list' %}"{% if departments_active %} class="active"{% endif %}>
                             <i class="fas fa-building"></i>
                             Departments
                         </a>
                     </li>
+                    {% endif %}
+                    {% if perms.employees.view_empdesignation %}
                     <li>
                         <a href="{% url 'designation_list' %}"{% if designations_active %} class="active"{% endif %}>
                             <i class="fas fa-id-card"></i>
                             Designations
                         </a>
                     </li>
+                    {% endif %}
+                    {% if perms.employees.view_leavetype %}
                     <li>
                         <a href="{% url 'leave_type_list' %}"{% if leave_settings_active %} class="active"{% endif %}>
                             <i class="fas fa-calendar-check"></i>
                             Leave Settings
                         </a>
                     </li>
+                    {% endif %}
+                    {% if user.is_superuser %}
+                    <li><a href="{% url 'accounts:access_users' %}"><i class="fas fa-user-shield"></i>User &amp; Access Management</a></li>
+                    {% endif %}
                 </ul>
             </li>
+            {% endif %}
             {% else %}
             <li{% if attendance_active %} class="active"{% endif %}>
                 <a href="{% url 'attendance_history' %}">
@@ -187,7 +205,7 @@
                                 {% endfor %}
                             </div>
 
-                            {% if user.is_staff or user.is_superuser or user.role == 'ADMIN' %}
+                            {% if perms.accounts.approve_leave or perms.accounts.reject_leave %}
                                 <a class="dashboard-notification-footer" href="{% url 'employee_list' %}#leave-requests">View All Requests <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
                             {% else %}
                                 <a class="dashboard-notification-footer" href="{% url 'leave_history' %}">View All Requests <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
@@ -212,7 +230,7 @@
                                 <small>
                                     {% if user.employee_profile.designation %}
                                         {{ user.employee_profile.designation }}
-                                    {% elif user.is_superuser or user.is_staff or user.role == 'ADMIN' %}
+                                    {% elif perms.employees.view_employee %}
                                         Admin
                                     {% else %}
                                         {{ user.get_role_display|default:"Employee" }}
@@ -243,7 +261,7 @@
                                     Edit Profile
                                 </a>
                             </li>
-                            {% if user.is_staff or user.is_superuser %}
+                            {% if user.is_superuser %}
                             <li>
                                 <a class="dropdown-item" href="{% url 'admin:index' %}">
                                     <i class="fas fa-gear"></i>
@@ -279,11 +297,38 @@
         {% include 'base/footer.html' %}
     </main>
 
+    {% if user.is_authenticated %}
+    <div class="modal fade" id="sessionTimeoutModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="sessionTimeoutTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content session-timeout-modal">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5" id="sessionTimeoutTitle">Your session is about to expire</h2>
+                </div>
+                <div class="modal-body">
+                    <p>You will be logged out due to inactivity in <strong id="sessionTimeoutCountdown">2:00</strong>.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="sessionStayLoggedIn">Stay Logged In</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{ session_timeout_seconds|json_script:"session-timeout-seconds" }}
+    {{ session_warning_seconds|json_script:"session-warning-seconds" }}
+    {% endif %}
+
     <!-- Bootstrap JS -->
     <script src="{% static 'assets/js/bootstrap_5.3.2.bundle.min.js' %}"></script>
 
     <!-- Dashboard JS -->
     <script src="{% static 'js/dashboard.js' %}"></script>
+    {% if user.is_authenticated %}
+    <script
+        src="{% static 'js/session-timeout.js' %}"
+        data-refresh-url="{% url 'accounts:session_refresh' %}"
+        data-logout-url="{% url 'accounts:logout' %}"
+    ></script>
+    {% endif %}
     {% block extra_js %}{% endblock %}
     <script>
         document.addEventListener('DOMContentLoaded', function () {

@@ -1,6 +1,11 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, Registration
+from .models import AuditLog, User, Registration
+
+# Staff status alone must never grant access to the Django administration site.
+admin.site.has_permission = lambda request: (
+    request.user.is_active and request.user.is_superuser
+)
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
@@ -27,11 +32,25 @@ class CustomUserAdmin(UserAdmin):
     
     @admin.action(description="Make selected users Admins")
     def make_admin(self, request, queryset):
-        queryset.update(role='ADMIN', is_staff=True)
+        queryset.update(role='ADMIN', is_staff=False)
     
     @admin.action(description="Make selected users Employees")
     def make_employee(self, request, queryset):
         queryset.update(role='EMPLOYEE', is_staff=False)
+
+
+@admin.register(AuditLog)
+class AuditLogAdmin(admin.ModelAdmin):
+    list_display = ('created_at', 'actor', 'action', 'module', 'object_repr', 'ip_address')
+    list_filter = ('module', 'action', 'created_at')
+    search_fields = ('actor__username', 'object_repr', 'details')
+    readonly_fields = ('actor', 'action', 'module', 'object_repr', 'details', 'ip_address', 'created_at')
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
 
 @admin.register(Registration)
 class RegistrationAdmin(admin.ModelAdmin):

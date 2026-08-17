@@ -1,0 +1,10 @@
+.session-timeout-modal {
+    border: 0;
+    border-radius: 12px;
+    box-shadow: 0 18px 55px rgba(15, 23, 42, 0.22);
+}
+
+.session-timeout-modal .modal-header,
+.session-timeout-modal .modal-footer {
+    border-color: #e5e7eb;
+}

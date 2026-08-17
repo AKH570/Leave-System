@@ -14,6 +14,38 @@ class User(AbstractUser):
     def __str__(self):
         return f"{self.username} ({self.get_role_display()})"
 
+    class Meta:
+        permissions = [
+            ('manage_users', 'Can manage application users'),
+            ('manage_roles', 'Can manage roles'),
+            ('manage_permissions', 'Can assign roles and permissions'),
+            ('access_settings', 'Can access application settings'),
+            ('approve_leave', 'Can approve leave requests'),
+            ('reject_leave', 'Can reject leave requests'),
+            ('process_salary', 'Can process salary'),
+            ('view_reports', 'Can view reports'),
+            ('export_reports', 'Can export reports'),
+        ]
+
+
+class AuditLog(models.Model):
+    actor = models.ForeignKey(
+        User, null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='rbac_audit_events',
+    )
+    action = models.CharField(max_length=80)
+    module = models.CharField(max_length=80)
+    object_repr = models.CharField(max_length=255, blank=True)
+    details = models.JSONField(default=dict, blank=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-created_at',)
+
+    def __str__(self):
+        return f'{self.actor or "System"}: {self.action} {self.object_repr}'
+
 class Registration(models.Model):
     """Model to handle new user registration requests before approval."""
     STATUS_CHOICES = (

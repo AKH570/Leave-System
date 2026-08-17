@@ -56,6 +56,8 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    # Enforce inactivity expiry after authentication and messages are available.
+    'accounts.middleware.SessionTimeoutMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
@@ -73,6 +75,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'employees.context_processors.current_profile_picture',
                 'employees.context_processors.pending_leave_notifications',
+                'accounts.context_processors.session_timeout',
             ],
         },
     },
@@ -140,3 +143,13 @@ MEDIA_ROOT = BASE_DIR / 'media'
 LOGIN_URL = 'accounts:login'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'accounts:login'
+
+# Authenticated sessions expire after this many seconds without a valid request.
+# Override with SESSION_TIMEOUT_SECONDS in the environment (default: 10 minutes).
+SESSION_TIMEOUT_SECONDS = config('SESSION_TIMEOUT_SECONDS', cast=int, default=600)
+SESSION_COOKIE_AGE = SESSION_TIMEOUT_SECONDS
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', cast=bool, default=not DEBUG)
+SESSION_COOKIE_SAMESITE = config('SESSION_COOKIE_SAMESITE', default='Lax')
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True

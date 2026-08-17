@@ -2,10 +2,12 @@ from io import StringIO
 from unittest.mock import patch
 
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.messages import get_messages
 from django.core.management import call_command
 from django.db.models.deletion import ProtectedError
-from django.test import TestCase, TransactionTestCase
+from django.test import TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 from employees.models import EmpDesignation
 from holidays.models import Holiday
@@ -14,6 +16,79 @@ from .management.commands.reset_uat_data import Command as ResetUatDataCommand
 from .forms import RegistrationForm
 from .models import Registration
 from .models import User
+
+
+class RBACTests(TestCase):
+    def setUp(self):
+        self.superuser = User.objects.create_superuser('root-rbac', 'root@example.com', 'pass')
+        self.admin_user = User.objects.create_user('app-admin', password='pass', role='ADMIN', is_staff=False)
+
+    def test_only_superuser_can_open_django_admin(self):
+        self.client.force_login(self.admin_user)
+        self.assertIn(self.client.get(reverse('admin:index')).status_code, (302, 403))
+        self.client.force_login(self.superuser)
+        self.assertEqual(self.client.get(reverse('admin:index')).status_code, 200)
+
+    def test_role_label_does_not_grant_employee_access(self):
+        self.client.force_login(self.admin_user)
+        self.assertEqual(self.client.get(reverse('employee_list')).status_code, 403)
+
+    def test_group_permission_grants_employee_access(self):
+        from django.contrib.auth.models import Group, Permission
+        role = Group.objects.create(name='Employee Viewer')
+        role.permissions.add(Permission.objects.get(codename='view_employee'))
+        self.admin_user.groups.add(role)
+        self.client.force_login(self.admin_user)
+        self.assertEqual(self.client.get(reverse('employee_list')).status_code, 200)
+
+    def test_access_management_is_superuser_only(self):
+        self.client.force_login(self.admin_user)
+        self.assertEqual(self.client.get(reverse('accounts:access_users')).status_code, 403)
+        self.client.force_login(self.superuser)
+        self.assertEqual(self.client.get(reverse('accounts:access_users')).status_code, 200)
+
+
+@override_settings(SESSION_TIMEOUT_SECONDS=600)
+class SessionTimeoutTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='timeout-user',
+            password='test-password',
+        )
+        self.client.force_login(self.user)
+
+    def test_valid_request_refreshes_activity_and_disables_cache(self):
+        response = self.client.get(reverse('dashboard'))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('_last_activity', self.client.session)
+        self.assertIn('no-store', response['Cache-Control'])
+
+    def test_expired_session_logs_out_and_displays_message(self):
+        session = self.client.session
+        session['_last_activity'] = int(timezone.now().timestamp()) - 601
+        session.save()
+        response = self.client.get(reverse('dashboard'), follow=True)
+
+        self.assertRedirects(response, reverse('accounts:login'))
+        self.assertNotIn('_auth_user_id', self.client.session)
+        self.assertIn(
+            'Your session has expired due to inactivity. Please log in again.',
+            [str(message) for message in get_messages(response.wsgi_request)],
+        )
+
+    def test_refresh_endpoint_requires_authentication(self):
+        response = self.client.post(reverse('accounts:session_refresh'))
+        self.assertJSONEqual(response.content, {'authenticated': True})
+        self.client.logout()
+        self.assertEqual(
+            self.client.post(reverse('accounts:session_refresh')).status_code,
+            302,
+        )
+
+    def test_public_login_does_not_include_timeout_script(self):
+        self.client.logout()
+        response = self.client.get(reverse('accounts:login'))
+        self.assertNotContains(response, 'session-timeout.js')
 
 
 class RegistrationDesignationTests(TestCase):

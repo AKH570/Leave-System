@@ -8,7 +8,7 @@ from attendances.models import Attendance
 @login_required
 def dashboard(request):
     user = request.user
-    is_admin = user.is_superuser or user.is_staff or getattr(user, 'role', '') == 'ADMIN'
+    is_admin = user.has_perm('employees.view_employee')
 
     if is_admin:
         # Admin/HR Stats

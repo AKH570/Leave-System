@@ -3,7 +3,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.db.models import OuterRef, Q, Subquery, Sum
@@ -12,7 +12,8 @@ from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from accounts.rbac import audit
 from django.views.generic import (
     CreateView,
     DeleteView,
@@ -49,23 +50,13 @@ def get_safe_redirect_url(request, fallback='dashboard'):
         return redirect_to
     return fallback
 
-class AdminAccessMixin(UserPassesTestMixin):
-    """Ensures only Admin/HR can access certain views."""
-    def test_func(self):
-        return self.request.user.is_authenticated and (
-            self.request.user.is_superuser
-            or self.request.user.is_staff
-            or getattr(self.request.user, 'role', '') == 'ADMIN'
-        )
-
-    def handle_no_permission(self):
-        if self.request.user.is_authenticated:
-            messages.error(self.request, 'You do not have permission to access HR settings.')
-            return redirect('dashboard')
-        return super().handle_no_permission()
+class AdminAccessMixin(PermissionRequiredMixin):
+    """Compatibility name; access is determined solely by Django permissions."""
+    raise_exception = True
 
 
 class SalaryListView(LoginRequiredMixin, AdminAccessMixin, ListView):
+    permission_required = 'employees.view_empsalary'
     model = EmpSalary
     template_name = 'salaries/salary_list.html'
     context_object_name = 'salary_records'
@@ -115,8 +106,10 @@ class SalaryFormMixin(LoginRequiredMixin, AdminAccessMixin):
     success_url = reverse_lazy('salary_list')
 
     def form_valid(self, form):
+        creating = form.instance.pk is None
         form.instance.updated_by = self.request.user
         response = super().form_valid(form)
+        audit(self.request, 'created' if creating else 'updated', 'salary', self.object)
         messages.success(self.request, self.success_message)
         return response
 
@@ -127,6 +120,7 @@ class SalaryFormMixin(LoginRequiredMixin, AdminAccessMixin):
 
 
 class SalaryCreateView(SalaryFormMixin, CreateView):
+    permission_required = 'employees.add_empsalary'
     success_message = 'Salary information added successfully.'
 
     def get_initial(self):
@@ -139,6 +133,7 @@ class SalaryCreateView(SalaryFormMixin, CreateView):
 
 
 class SalaryUpdateView(SalaryFormMixin, UpdateView):
+    permission_required = 'employees.change_empsalary'
     success_message = 'Salary information updated successfully.'
 
 class DashboardView(LoginRequiredMixin, TemplateView):
@@ -155,7 +150,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             context['recent_leaves'] = LeaveRequest.objects.filter(employee=employee).order_by('-applied_at')[:5]
             
             # Check if Admin/HR for more stats
-            if user.is_staff or getattr(user, 'role', '') == 'ADMIN':
+            if user.has_perm('employees.view_employee'):
                 context['is_admin'] = True
                 context['pending_requests_count'] = LeaveRequest.objects.filter(status='PENDING').count()
                 context['total_employees_count'] = Employee.objects.filter(is_active=True).count()
@@ -164,7 +159,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 context['is_admin'] = False
         except Employee.DoesNotExist:
             context['employee'] = None
-            context['is_admin'] = user.is_staff or getattr(user, 'role', '') == 'ADMIN'
+            context['is_admin'] = user.has_perm('employees.view_employee')
             
         return context
 
@@ -368,6 +363,7 @@ def profile_picture_upload(request):
     }, status=400)
 
 class EmployeeDetailView(LoginRequiredMixin, AdminAccessMixin, DetailView):
+    permission_required = 'employees.view_employee'
     model = Employee
     template_name = 'employees/employee_detail.html'
     context_object_name = 'employee'
@@ -419,16 +415,17 @@ def leave_cancel(request, pk):
 # --- Admin/HR Views ---
 
 class AdminLeaveListView(LoginRequiredMixin, AdminAccessMixin, ListView):
+    permission_required = 'employees.view_leaverequest'
     model = LeaveRequest
     template_name = 'leaves/admin_leave_list.html'
     context_object_name = 'leaves'
     queryset = LeaveRequest.objects.all()
 
+@login_required
+@permission_required('accounts.approve_leave', raise_exception=True)
+@require_POST
 def leave_approve(request, pk):
     """Admin action to approve a request."""
-    if not (request.user.is_staff or getattr(request.user, 'role', '') == 'ADMIN'):
-        return redirect('dashboard')
-    
     leave = get_object_or_404(LeaveRequest, pk=pk)
     redirect_to = get_safe_redirect_url(request)
     if request.method == 'POST':
@@ -446,14 +443,15 @@ def leave_approve(request, pk):
         except ValidationError as error:
             messages.error(request, '; '.join(error.messages))
         else:
+            audit(request, 'approved', 'leave', leave)
             messages.success(request, f"Leave request for {leave.employee} approved.")
     return redirect(redirect_to)
 
+@login_required
+@permission_required('accounts.reject_leave', raise_exception=True)
+@require_POST
 def leave_reject(request, pk):
     """Admin action to reject a request."""
-    if not (request.user.is_staff or getattr(request.user, 'role', '') == 'ADMIN'):
-        return redirect('dashboard')
-    
     leave = get_object_or_404(LeaveRequest, pk=pk)
     redirect_to = get_safe_redirect_url(request)
     if request.method == 'POST':
@@ -470,17 +468,20 @@ def leave_reject(request, pk):
             leave.approved_by = None
         leave.approved_at = timezone.now()
         leave.save()
+        audit(request, 'rejected', 'leave', leave)
         messages.warning(request, f"Leave request for {leave.employee} rejected.")
     return redirect(redirect_to)
 
 # --- Management Views ---
 
 class LeaveTypeListView(LoginRequiredMixin, AdminAccessMixin, ListView):
+    permission_required = ('accounts.access_settings', 'employees.view_leavetype')
     model = LeaveType
     template_name = 'leaves/leave_type_list.html'
     context_object_name = 'leave_types'
 
 class LeaveTypeCreateView(LoginRequiredMixin, AdminAccessMixin, CreateView):
+    permission_required = ('accounts.access_settings', 'employees.add_leavetype')
     model = LeaveType
     form_class = LeaveTypeForm
     template_name = 'leaves/leave_type_form.html'
@@ -491,6 +492,7 @@ class LeaveTypeCreateView(LoginRequiredMixin, AdminAccessMixin, CreateView):
         return super().form_valid(form)
 
 class LeaveTypeUpdateView(LoginRequiredMixin, AdminAccessMixin, UpdateView):
+    permission_required = ('accounts.access_settings', 'employees.change_leavetype')
     model = LeaveType
     form_class = LeaveTypeForm
     template_name = 'leaves/leave_type_form.html'
@@ -501,6 +503,7 @@ class LeaveTypeUpdateView(LoginRequiredMixin, AdminAccessMixin, UpdateView):
         return super().form_valid(form)
 
 class LeaveTypeDeleteView(LoginRequiredMixin, AdminAccessMixin, DeleteView):
+    permission_required = ('accounts.access_settings', 'employees.delete_leavetype')
     model = LeaveType
     template_name = 'setup/confirm_delete.html'
     success_url = reverse_lazy('leave_type_list')
@@ -518,6 +521,7 @@ class LeaveTypeDeleteView(LoginRequiredMixin, AdminAccessMixin, DeleteView):
         return super().form_valid(form)
 
 class DepartmentListView(LoginRequiredMixin, AdminAccessMixin, ListView):
+    permission_required = ('accounts.access_settings', 'departments.view_department')
     model = Department
     template_name = 'setup/department_list.html'
     context_object_name = 'departments'
@@ -526,6 +530,7 @@ class DepartmentListView(LoginRequiredMixin, AdminAccessMixin, ListView):
         return Department.objects.select_related('manager__user').order_by('name')
 
 class DepartmentCreateView(LoginRequiredMixin, AdminAccessMixin, CreateView):
+    permission_required = ('accounts.access_settings', 'departments.add_department')
     model = Department
     form_class = DepartmentForm
     template_name = 'setup/department_form.html'
@@ -536,6 +541,7 @@ class DepartmentCreateView(LoginRequiredMixin, AdminAccessMixin, CreateView):
         return super().form_valid(form)
 
 class DepartmentUpdateView(LoginRequiredMixin, AdminAccessMixin, UpdateView):
+    permission_required = ('accounts.access_settings', 'departments.change_department')
     model = Department
     form_class = DepartmentForm
     template_name = 'setup/department_form.html'
@@ -546,6 +552,7 @@ class DepartmentUpdateView(LoginRequiredMixin, AdminAccessMixin, UpdateView):
         return super().form_valid(form)
 
 class DepartmentDeleteView(LoginRequiredMixin, AdminAccessMixin, DeleteView):
+    permission_required = ('accounts.access_settings', 'departments.delete_department')
     model = Department
     template_name = 'setup/confirm_delete.html'
     success_url = reverse_lazy('department_list')
@@ -563,6 +570,7 @@ class DepartmentDeleteView(LoginRequiredMixin, AdminAccessMixin, DeleteView):
         return super().form_valid(form)
 
 class DesignationListView(LoginRequiredMixin, AdminAccessMixin, ListView):
+    permission_required = ('accounts.access_settings', 'employees.view_empdesignation')
     model = EmpDesignation
     template_name = 'setup/designation_list.html'
     context_object_name = 'designations'
@@ -571,6 +579,7 @@ class DesignationListView(LoginRequiredMixin, AdminAccessMixin, ListView):
         return EmpDesignation.objects.select_related('department', 'created_by').order_by('designation_name')
 
 class DesignationCreateView(LoginRequiredMixin, AdminAccessMixin, CreateView):
+    permission_required = ('accounts.access_settings', 'employees.add_empdesignation')
     model = EmpDesignation
     form_class = EmpDesignationForm
     template_name = 'setup/designation_form.html'
@@ -582,6 +591,7 @@ class DesignationCreateView(LoginRequiredMixin, AdminAccessMixin, CreateView):
         return super().form_valid(form)
 
 class DesignationUpdateView(LoginRequiredMixin, AdminAccessMixin, UpdateView):
+    permission_required = ('accounts.access_settings', 'employees.change_empdesignation')
     model = EmpDesignation
     form_class = EmpDesignationForm
     template_name = 'setup/designation_form.html'
@@ -592,6 +602,7 @@ class DesignationUpdateView(LoginRequiredMixin, AdminAccessMixin, UpdateView):
         return super().form_valid(form)
 
 class DesignationDeleteView(LoginRequiredMixin, AdminAccessMixin, DeleteView):
+    permission_required = ('accounts.access_settings', 'employees.delete_empdesignation')
     model = EmpDesignation
     template_name = 'setup/confirm_delete.html'
     success_url = reverse_lazy('designation_list')
@@ -617,6 +628,7 @@ class DesignationDeleteView(LoginRequiredMixin, AdminAccessMixin, DeleteView):
         return response
 
 class EmployeeListView(LoginRequiredMixin, AdminAccessMixin, ListView):
+    permission_required = 'employees.view_employee'
     model = Employee
     template_name = 'employees/employee_list.html'
     context_object_name = 'employees'
@@ -703,14 +715,6 @@ class EmployeeListView(LoginRequiredMixin, AdminAccessMixin, ListView):
         })
         return context
 
-def _is_admin_user(user):
-    return user.is_authenticated and (
-        user.is_superuser
-        or user.is_staff
-        or getattr(user, 'role', '') == 'ADMIN'
-    )
-
-
 def _employee_for_admin_edit(pk):
     return get_object_or_404(
         Employee.objects.select_related(
@@ -730,7 +734,7 @@ def _add_employee_list_values(employee):
 
 
 @login_required
-@user_passes_test(_is_admin_user)
+@permission_required(('employees.change_employee', 'accounts.manage_users'), raise_exception=True)
 def employee_admin_edit(request, pk):
     """Return a pre-populated employee edit form for the Bootstrap modal."""
     employee = _employee_for_admin_edit(pk)
@@ -745,7 +749,7 @@ def employee_admin_edit(request, pk):
 
 @require_POST
 @login_required
-@user_passes_test(_is_admin_user)
+@permission_required(('employees.change_employee', 'accounts.manage_users'), raise_exception=True)
 def employee_admin_update(request, pk):
     """Validate and save an employee edit, returning modal/row HTML as JSON."""
     employee = _employee_for_admin_edit(pk)
@@ -787,7 +791,7 @@ def employee_admin_update(request, pk):
 
 @require_POST
 @login_required
-@user_passes_test(_is_admin_user)
+@permission_required('departments.add_department', raise_exception=True)
 def department_quick_create(request):
     """Create a department from an employee modal without leaving the page."""
     form = QuickDepartmentForm(request.POST)

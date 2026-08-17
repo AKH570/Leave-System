@@ -1,9 +1,43 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import Group, Permission
 from django.core.exceptions import ValidationError
 import re
-from .models import Registration
+from .models import Registration, User
 from employees.models import EmpDesignation
+
+
+class AdminUserCreationForm(UserCreationForm):
+    groups = forms.ModelMultipleChoiceField(Group.objects.all(), required=False, widget=forms.CheckboxSelectMultiple)
+
+    class Meta(UserCreationForm.Meta):
+        model = User
+        fields = ('username', 'first_name', 'last_name', 'email', 'groups')
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.role, user.is_staff = 'ADMIN', False
+        if commit:
+            user.save()
+            self.save_m2m()
+        return user
+
+
+class AccessUserForm(forms.ModelForm):
+    groups = forms.ModelMultipleChoiceField(Group.objects.all(), required=False, widget=forms.CheckboxSelectMultiple)
+    user_permissions = forms.ModelMultipleChoiceField(Permission.objects.select_related('content_type'), required=False, widget=forms.CheckboxSelectMultiple)
+
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name', 'email', 'is_active', 'groups', 'user_permissions')
+
+
+class RoleForm(forms.ModelForm):
+    permissions = forms.ModelMultipleChoiceField(Permission.objects.select_related('content_type'), required=False, widget=forms.CheckboxSelectMultiple)
+
+    class Meta:
+        model = Group
+        fields = ('name', 'permissions')
 
 class RegistrationForm(forms.ModelForm):
     """Form for new user registration"""
