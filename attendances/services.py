@@ -4,7 +4,7 @@ from django.utils import timezone
 
 from employees.models import Employee
 
-from .models import Attendance
+from .models import Attendance, AttendanceLog
 
 
 def _employee_for_user(user):
@@ -46,6 +46,10 @@ def record_check_in(user, *, at=None):
             fields_to_update.append('status')
         if fields_to_update:
             attendance.save(update_fields=fields_to_update)
+    AttendanceLog.objects.create(
+        attendance=attendance, employee=employee,
+        event_type=AttendanceLog.EventType.CHECK_IN, event_time=occurred_at,
+    )
     return attendance
 
 
@@ -63,6 +67,10 @@ def record_check_out(user, *, at=None):
     if attendance is None:
         return None
 
+    AttendanceLog.objects.create(
+        attendance=attendance, employee=employee,
+        event_type=AttendanceLog.EventType.CHECK_OUT, event_time=occurred_at,
+    )
     attendance.check_out = _local_time(occurred_at)
     attendance.save(update_fields=['check_out'])
     return attendance

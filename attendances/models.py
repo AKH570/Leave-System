@@ -74,3 +74,30 @@ class Attendance(models.Model):
 
     def __str__(self):
         return f"{self.employee} - {self.date}"
+
+
+class AttendanceLog(models.Model):
+    class EventType(models.TextChoices):
+        CHECK_IN = 'CHECK_IN', 'Check-In'
+        CHECK_OUT = 'CHECK_OUT', 'Check-Out'
+
+    attendance = models.ForeignKey(
+        Attendance, on_delete=models.CASCADE, related_name='logs'
+    )
+    employee = models.ForeignKey(
+        'employees.Employee', on_delete=models.CASCADE,
+        related_name='attendance_logs',
+    )
+    event_type = models.CharField(max_length=10, choices=EventType.choices)
+    event_time = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('event_time', 'pk')
+        indexes = [
+            models.Index(fields=('employee', 'event_time'), name='att_log_emp_time_idx'),
+            models.Index(fields=('attendance', 'event_time'), name='att_log_att_time_idx'),
+        ]
+
+    def __str__(self):
+        return f'{self.employee} {self.get_event_type_display()} {self.event_time}'

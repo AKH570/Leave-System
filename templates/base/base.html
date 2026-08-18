@@ -40,7 +40,7 @@
         {% url_name_active request 'designation_list' 'designation_add' 'designation_edit' 'designation_delete' as designations_active %}
         {% url_name_active request 'leave_type_list' 'leave_type_add' 'leave_type_edit' 'leave_type_delete' as leave_settings_active %}
         {% url_name_active request 'leave_apply' as leave_apply_active %}
-        {% url_name_active request 'attendance_history' as attendance_active %}
+        {% url_name_active request 'attendance_history' 'employee_daily_attendance_report' 'all_employees_daily_attendance_report' 'employee_range_attendance_report' as attendance_active %}
         {% url_name_active request 'leave_report' 'attendance_report' as reports_active %}
 
         <ul>
@@ -68,6 +68,17 @@
             </li>
             {% endif %}
             {% if perms.accounts.view_reports %}
+            <li class="sidebar-menu-group{% if attendance_active and request.resolver_match.url_name != 'attendance_history' %} active is-open{% endif %}">
+                <button type="button" class="sidebar-menu-toggle" aria-expanded="{% if attendance_active %}true{% else %}false{% endif %}" aria-controls="attendanceReportsSubmenu">
+                    <span><i class="fas fa-clock" aria-hidden="true"></i> Attendance</span><i class="fas fa-chevron-down sidebar-menu-chevron" aria-hidden="true"></i>
+                </button>
+                <ul class="sidebar-submenu" id="attendanceReportsSubmenu">
+                    <li><a href="{% url 'attendance_report' %}"><i class="fas fa-list"></i> Daily Attendance</a></li>
+                    <li><a href="{% url 'employee_daily_attendance_report' %}"><i class="fas fa-user-clock"></i> Employee Daily Report</a></li>
+                    <li><a href="{% url 'all_employees_daily_attendance_report' %}"><i class="fas fa-users"></i> All Employee Daily Report</a></li>
+                    <li><a href="{% url 'employee_range_attendance_report' %}"><i class="fas fa-calendar-week"></i> Employee Date Range</a></li>
+                </ul>
+            </li>
             <li class="sidebar-menu-group{% if reports_active %} active is-open{% endif %}">
                 <button type="button" class="sidebar-menu-toggle" aria-expanded="{% if reports_active %}true{% else %}false{% endif %}" aria-controls="reportsSubmenu">
                     <span><i class="fas fa-chart-column" aria-hidden="true"></i> Reports</span>
@@ -75,7 +86,6 @@
                 </button>
                 <ul class="sidebar-submenu" id="reportsSubmenu">
                     <li><a href="{% url 'leave_report' %}"{% if request.resolver_match.url_name == 'leave_report' %} class="active"{% endif %}><i class="fas fa-calendar-check"></i> Leave Report</a></li>
-                    <li><a href="{% url 'attendance_report' %}"{% if request.resolver_match.url_name == 'attendance_report' %} class="active"{% endif %}><i class="fas fa-clock"></i> Attendance Report</a></li>
                 </ul>
             </li>
             {% endif %}

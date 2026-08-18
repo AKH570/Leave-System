@@ -22,12 +22,28 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY')
+SECRET_KEY = config('DJANGO_SECRET_KEY', default=None)
+if SECRET_KEY is None:
+    SECRET_KEY = config('SECRET_KEY', default='')
+if not SECRET_KEY:
+    raise RuntimeError('DJANGO_SECRET_KEY must be configured.')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', cast=bool, default=False)
+DEBUG = config('DJANGO_DEBUG', cast=bool, default=None)
+if DEBUG is None:
+    DEBUG = config('DEBUG', cast=bool, default=False)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in config('DJANGO_ALLOWED_HOSTS', default='127.0.0.1,localhost').split(',')
+    if host.strip()
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in config('DJANGO_CSRF_TRUSTED_ORIGINS', default='').split(',')
+    if origin.strip()
+]
 
 
 # Application definition
@@ -51,6 +67,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -87,12 +104,29 @@ AUTH_USER_MODEL = 'accounts.User'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / config('DB_NAME'),
+DB_ENGINE = config('DB_ENGINE', default='sqlite').lower()
+
+if DB_ENGINE in {'mysql', 'mariadb'}:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': config('DB_NAME'),
+            'USER': config('DB_USER'),
+            'PASSWORD': config('DB_PASSWORD'),
+            'HOST': config('DB_HOST', default='localhost'),
+            'PORT': config('DB_PORT', default='3306'),
+            'OPTIONS': {'charset': 'utf8mb4'},
+            'CONN_MAX_AGE': config('DB_CONN_MAX_AGE', cast=int, default=60),
+        }
     }
-}
+else:
+    sqlite_name = config('DB_NAME', default='db.sqlite3')
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / sqlite_name,
+        }
+    }
 
 
 # Password validation
@@ -130,15 +164,26 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
 
-STATIC_ROOT = BASE_DIR / "staticfiles"
+STATIC_ROOT = Path(config('DJANGO_STATIC_ROOT', default=str(BASE_DIR / 'staticfiles')))
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        # The checked-in Bootstrap bundle references a development source map
+        # that is not distributed with the project. Compression without
+        # manifest rewriting keeps collectstatic production-safe.
+        'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
+    },
+}
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = Path(config('DJANGO_MEDIA_ROOT', default=str(BASE_DIR / 'media')))
 
 # Authentication Settings
 LOGIN_URL = 'accounts:login'
@@ -154,3 +199,53 @@ SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', cast=bool, default=not DEBUG)
 SESSION_COOKIE_SAMESITE = config('SESSION_COOKIE_SAMESITE', default='Lax')
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# Enable these behind the HTTPS-enabled cPanel/Passenger application. Keep
+# them environment-driven so local HTTP development remains usable.
+CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', cast=bool, default=not DEBUG)
+SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', cast=bool, default=False)
+USE_X_FORWARDED_HOST = config('USE_X_FORWARDED_HOST', cast=bool, default=False)
+if config('TRUST_X_FORWARDED_PROTO', cast=bool, default=False):
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+SECURE_HSTS_SECONDS = config('SECURE_HSTS_SECONDS', cast=int, default=0)
+SECURE_HSTS_INCLUDE_SUBDOMAINS = config(
+    'SECURE_HSTS_INCLUDE_SUBDOMAINS', cast=bool, default=False
+)
+SECURE_HSTS_PRELOAD = config('SECURE_HSTS_PRELOAD', cast=bool, default=False)
+
+# Passenger captures stderr in its application/error log. Set DJANGO_LOG_FILE
+# only when the selected cPanel account has a writable private logs directory.
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': config('DJANGO_LOG_LEVEL', default='INFO'),
+    },
+    'loggers': {
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+    },
+}
+
+DJANGO_LOG_FILE = config('DJANGO_LOG_FILE', default='').strip()
+if DJANGO_LOG_FILE:
+    LOGGING['handlers']['file'] = {
+        'class': 'logging.handlers.RotatingFileHandler',
+        'filename': DJANGO_LOG_FILE,
+        'maxBytes': 5 * 1024 * 1024,
+        'backupCount': 3,
+    }
+    LOGGING['root']['handlers'].append('file')
+    LOGGING['loggers']['django.request']['handlers'].append('file')

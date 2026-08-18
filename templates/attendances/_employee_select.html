@@ -1,0 +1,4 @@
+<select class="form-select" name="employee" required>
+  <option value="">Select employee</option>
+  {% for item in employees %}<option value="{{ item.pk }}" {% if selected_employee == item.pk|stringformat:'s' %}selected{% endif %}>{{ item.employee_id }} — {{ item.user.get_full_name|default:item.user.username }}</option>{% endfor %}
+</select>

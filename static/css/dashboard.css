@@ -1852,7 +1852,7 @@ body {
 }
 
 .sidebar-menu-group.is-open .sidebar-submenu {
-    max-height: 180px;
+    max-height: 600px;
     padding: 6px 0 8px;
     opacity: 1;
 }
